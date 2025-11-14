@@ -72,27 +72,27 @@ site:
       #     target: _self
       #   - id: course
       #     text: 教程
-      #     href: /blog/category/Course
+      #     href: /post/category/Course
       #     svg: "material-symbols:book-outline"
       #     target: _self
       #   - id: anime  
       #     text: 动漫  
-      #     href: /blog/category/Anime  
+      #     href: /post/category/Anime  
       #     svg: "material-symbols:movie-outline"  
       #     target: _self 
       #   - id: tv  
       #     text: TV  
-      #     href: /blog/category/TV  
+      #     href: /post/category/TV  
       #     svg: "material-symbols:movie-outline"  
       #     target: _self 
       #   - id: documentation
       #     text: 文章
-      #     href: /blog/category/Documentation
+      #     href: /post/category/Documentation
       #     svg: "material-symbols:unknown-document-outline-rounded"
       #     target: _self
         # - id: examples
         #   text: Examples
-        #   href: /blog/category/Examples
+        #   href: /post/category/Examples
         #   svg: "material-symbols:deployed-code-outline"
         #   target: _self
         # 子菜单项配置

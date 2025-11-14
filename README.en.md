@@ -3,7 +3,7 @@ A clean, elegant, and fast static blog template! 🚀 Built with Astro
 </pre>
 
 <div align="center">
-<img alt="Ryuchan Logo" src="https://picbed.xiaozhangya.xin/blog/logo.png" width="280px">
+<img alt="Ryuchan Logo" src="https://picbed.xiaozhangya.xin/post/logo.png" width="280px">
 </div>
 
 [![license](https://badgen.net/github/license/xz131714/RyuChan)](https://github.com/xz131714/RyuChan/blob/main/LICENSE)&nbsp;&nbsp;&nbsp;[![release](https://badgen.net/github/release/xz131714/RyuChan)](https://github.com/xz131714/RyuChan/releases)
@@ -12,7 +12,7 @@ A clean, elegant, and fast static blog template! 🚀 Built with Astro
 
 ## 📷 Preview
 
-![preview](https://picbed.xiaozhangya.xin/blog/preview-dark.png)
+![preview](https://picbed.xiaozhangya.xin/post/preview-dark.png)
 
 ## ✨ Features
 

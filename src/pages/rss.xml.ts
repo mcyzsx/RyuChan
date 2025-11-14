@@ -25,7 +25,7 @@ export async function GET(context: any) {
       ? replacePath(await marked(body), context.site)
       : "No content available.";
 
-    const postURL = new URL(`/blog/${slug}/`, context.site);
+    const postURL = new URL(`/post/${slug}/`, context.site);
 
     return {
       title,

@@ -13,7 +13,7 @@ const { prevPost, nextPost } = Astro.props;
 <div class="post-navigation">    
   <!-- 上一篇 -->    
   {prevPost && (    
-    <a href={`/blog/${prevPost.slug}`} class="nav-card prev">    
+    <a href={`/post/${prevPost.slug}`} class="nav-card prev">    
       <div class="nav-arrow left">  
         &lt;
       </div>  
@@ -26,7 +26,7 @@ const { prevPost, nextPost } = Astro.props;
     
   <!-- 下一篇 -->    
   {nextPost && (    
-    <a href={`/blog/${nextPost.slug}`} class="nav-card next">    
+    <a href={`/post/${nextPost.slug}`} class="nav-card next">    
       <div class="nav-content">    
         <div class="nav-title">{nextPost.data.title}</div>    
       </div>    

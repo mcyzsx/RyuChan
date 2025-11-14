@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import type { Post, Page } from "@interfaces/data";
 import PostCard from "@components/PostCard.astro";
 import BaseLayout from "@layouts/BaseLayout.astro";
@@ -23,7 +25,7 @@ const pageLinks = generatePageLinks(totalPages);
   <!-- Blog Navigation Cards -->
   <CardGroup cols="2">
     <!-- Archives Card -->
-    <a href="/blog/archives" class="card bg-base-100 shadow-lg">
+    <a href="/post/archives" class="card bg-base-100 shadow-lg">
       <div class="card-body p-4">
         <div class="flex items-center gap-3">
           <div class="rounded-full bg-accent/10 p-3">
@@ -38,7 +40,7 @@ const pageLinks = generatePageLinks(totalPages);
     </a>
 
     <!-- Categories Card -->
-    <a href="/blog/categories" class="card bg-base-100 shadow-lg">
+    <a href="/post/categories" class="card bg-base-100 shadow-lg">
       <div class="card-body p-4">
         <div class="flex items-center gap-3">
           <div class="rounded-full bg-primary/10 p-3">
@@ -53,7 +55,7 @@ const pageLinks = generatePageLinks(totalPages);
     </a>
 
     <!-- Tags Card -->
-    <a href="/blog/tags" class="card bg-base-100 shadow-lg">
+    <a href="/post/tags" class="card bg-base-100 shadow-lg">
       <div class="card-body p-4">
         <div class="flex items-center gap-3">
           <div class="rounded-full bg-secondary/10 p-3">
@@ -68,7 +70,7 @@ const pageLinks = generatePageLinks(totalPages);
     </a>
 
     <!-- Search Card -->
-    <a href="/blog/search" class="card bg-base-100 shadow-lg">
+    <a href="/post/search" class="card bg-base-100 shadow-lg">
       <div class="card-body p-4">
         <div class="flex items-center gap-3">
           <div class="rounded-full bg-info/10 p-3">
@@ -91,7 +93,7 @@ const pageLinks = generatePageLinks(totalPages);
           title={blog.data.title}
           image={blog.data.image}
           description={blog.data.description}
-          url={"/blog/" + blog.slug}
+          url={"/post/" + blog.slug}
           pubDate={blog.data.pubDate}
           badge={blog.data.badge}
           categories={blog.data.categories}

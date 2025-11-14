@@ -21,11 +21,11 @@ if (currentPath === "/") {
 } else if (currentPath === "/about") {
   pageKey = "about";
 } else if (
-  currentPath.startsWith("/blog/") &&
-  !currentPath.includes("/blog/page/") &&
+  currentPath.startsWith("/post/") &&
+  !currentPath.includes("/post/page/") &&
   currentPath !== "/blog" &&
-  !currentPath.includes("/blog/tag/") &&
-  !currentPath.includes("/blog/category/")
+  !currentPath.includes("/post/tag/") &&
+  !currentPath.includes("/post/category/")
 ) {
   pageKey = "home"; // 博客详情页也用 home 配置
 } else {
@@ -38,18 +38,18 @@ const pageConfig =
   SITE_PAGES[cleanPageKey] ?? SITE_PAGES[pageKey] ?? SITE_PAGES["home"];
 const useLargeFont =
   pageKey === "home" ||
-  (currentPath.startsWith("/blog/") &&
-    !currentPath.includes("/blog/page/") &&
+  (currentPath.startsWith("/post/") &&
+    !currentPath.includes("/post/page/") &&
     currentPath !== "/blog" &&
-    !currentPath.includes("/blog/tag/") &&
-    !currentPath.includes("/blog/category/"));
+    !currentPath.includes("/post/tag/") &&
+    !currentPath.includes("/post/category/"));
 const useTypewriter =
   pageKey === "home" ||
-  (currentPath.startsWith("/blog/") &&
-    !currentPath.includes("/blog/page/") &&
+  (currentPath.startsWith("/post/") &&
+    !currentPath.includes("/post/page/") &&
     currentPath !== "/blog" &&
-    !currentPath.includes("/blog/tag/") &&
-    !currentPath.includes("/blog/category/"));
+    !currentPath.includes("/post/tag/") &&
+    !currentPath.includes("/post/category/"));
 const displayTitle = pageConfig.title || "";
 const displaySubtitle = pageConfig.subtitle || "";
 const hasTitle = displayTitle !== undefined && displayTitle !== "";

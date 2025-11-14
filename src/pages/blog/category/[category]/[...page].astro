@@ -29,7 +29,7 @@ const pageLinks = generatePageLinks(totalPages);
         <h1 id="h1" class="text-2xl md:text-3xl font-bold">{params.category}</h1>
         <div class="badge badge-primary">{page.total} {page.total === 1 ? t("label.post") : t("label.posts")}</div>
       </div>
-      <a href="/blog/categories" class="btn btn-outline btn-sm gap-2">
+      <a href="/post/categories" class="btn btn-outline btn-sm gap-2">
         <Icon name="lucide:folder" class="w-4 h-4" />
         <span>{t("label.allCategories")}</span>
       </a>
@@ -44,7 +44,7 @@ const pageLinks = generatePageLinks(totalPages);
           title={blog.data.title}
           image={blog.data.image}
           description={blog.data.description}
-          url={"/blog/" + blog.slug}
+          url={"/post/" + blog.slug}
           pubDate={blog.data.pubDate}
           badge={blog.data.badge}
           categories={blog.data.categories}
@@ -55,5 +55,5 @@ const pageLinks = generatePageLinks(totalPages);
       ))
     }
   </CardGroup>
-  <Pagination page={page} totalPages={totalPages} pageLinks={pageLinks} baseUrl={`/blog/category/${params.category}`} />
+  <Pagination page={page} totalPages={totalPages} pageLinks={pageLinks} baseUrl={`/post/category/${params.category}`} />
 </BaseLayout>

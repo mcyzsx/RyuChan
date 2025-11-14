@@ -1,6 +1,7 @@
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import tailwind from "@astrojs/tailwind";
+import vercel from "@astrojs/vercel/serverless"; // 或 vercel/edge，看你需求
 import playformCompress from "@playform/compress";
 import terser from "@rollup/plugin-terser";
 import icon from "astro-icon";
@@ -8,6 +9,7 @@ import { defineConfig } from "astro/config";
 import rehypeExternalLinks from "rehype-external-links";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
+
 import { CODE_THEME, USER_SITE } from "./src/config.ts";
 
 import updateConfig from "./src/integration/updateConfig.ts";
@@ -17,7 +19,8 @@ import { remarkReadingTime } from "./src/plugins/remark-reading-time.mjs";
 // https://astro.build/config
 export default defineConfig({
   site: USER_SITE,
-  output: "static",
+  output: "server",
+  adapter: vercel(), // ✅ 现在不会报错了
   style: {
     scss: {
       includePaths: ["./src/styles"],

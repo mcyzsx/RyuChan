@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import BaseLayout from "@layouts/BaseLayout.astro";
 import License from "@components/widgets/License.astro";
 import PostInfo from "@components/widgets/PostInfo.astro";
@@ -18,14 +20,10 @@ export async function getStaticPaths() {
   // 过滤草稿并按发布日期排序
   const publishedPosts = posts
     .filter((post) => !post.data.draft)
-    .sort(
-      (a, b) =>
-        new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime(),
-    );
+    .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime());
 
   return publishedPosts.map((blog, index) => {
-    const prevPost =
-      index < publishedPosts.length - 1 ? publishedPosts[index + 1] : null;
+    const prevPost = index < publishedPosts.length - 1 ? publishedPosts[index + 1] : null;
     const nextPost = index > 0 ? publishedPosts[index - 1] : null;
 
     return {
@@ -43,32 +41,19 @@ interface Props {
 
 const { blog, prevPost, nextPost } = Astro.props;
 const { Content, remarkPluginFrontmatter, headings } = await blog.render();
-const displayDate = blog.data.pubDate
-  ? dayjs(blog.data.pubDate).format(DATE_FORMAT)
-  : "";
+const displayDate = blog.data.pubDate ? dayjs(blog.data.pubDate).format(DATE_FORMAT) : "";
 const url = new URL(`/${blog.slug}`, Astro.url.origin);
 ---
 
-<BaseLayout
-  title={blog.data.title}
-  image={blog.data.image}
-  headings={headings}
-  showTOC={true}
-  isPostPage={true}
->
-  <MainCard
-    title={blog.data.title}
-    description={blog.data.description}
-    image={blog.data.image}
-    infoIcon="lucide:info"
-  >
+<BaseLayout title={blog.data.title} image={blog.data.image} headings={headings} showTOC={true} isPostPage={true}>
+  <MainCard title={blog.data.title} description={blog.data.description} image={blog.data.image} infoIcon="lucide:info">
     <!-- Article info using PostInfo component -->
     <PostInfo
       pubDate={displayDate}
       badge={blog.data.badge}
       word={remarkPluginFrontmatter.totalCharCount}
       time={remarkPluginFrontmatter.readingTime}
-      url={`/blog/${blog.slug}`}
+      url={`/post/${blog.slug}`}
     />
 
     <!-- Categories and tags using PostFilter component -->
@@ -103,24 +88,20 @@ const url = new URL(`/${blog.slug}`, Astro.url.origin);
 
   <!-- Comments Section -->
   {
-    commentsConfig?.enable &&
-      commentsConfig.type === "giscus" &&
-      commentsConfig.giscus && (
-        <section class="comments">
-          <h2>Comments</h2>
-          <Giscus {...commentsConfig.giscus} />
-        </section>
-      )
+    commentsConfig?.enable && commentsConfig.type === "giscus" && commentsConfig.giscus && (
+      <section class="comments">
+        <h2>Comments</h2>
+        <Giscus {...commentsConfig.giscus} />
+      </section>
+    )
   }
   {
-    commentsConfig?.enable &&
-      commentsConfig.type === "waline" &&
-      commentsConfig.waline && (
-        <section class="comments">
-          <h2>Comments</h2>
-          <Waline {...commentsConfig.waline} />
-        </section>
-      )
+    commentsConfig?.enable && commentsConfig.type === "waline" && commentsConfig.waline && (
+      <section class="comments">
+        <h2>Comments</h2>
+        <Waline {...commentsConfig.waline} />
+      </section>
+    )
   }
 
   <!-- 在页面底部添加 Fancybox 初始化脚本 -->

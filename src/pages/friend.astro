@@ -1,24 +1,55 @@
 ---
+// src/pages/friend.astro
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { Icon } from "astro-icon/components";
 import MainCard from "@/components/MainCard.astro";
-import BaseCard from "@/components/BaseCard.astro";
-import LinkCard from "@/components/mdx/LinkCard.astro";
-import FriendCard from "@/components/mdx/FriendCard.astro";
 import Card from "@/components/temple/Card.astro";
 import CardGroup from "@/components/temple/CardGroup.astro";
-import Showcase from "@/components/mdx/Showcase.astro";
+import FriendCard from "@/components/mdx/FriendCard.astro";
+// import Showcase from "@/components/mdx/Showcase.astro";
 
-const sites = [{ name: "Ryuchan Demo", url: "https://demo.131714.xyz/" }];
+/* 1. 拉取友链数据 */
+const api = "https://friends-api.kemeow.top/v2/data.json";
+let friends: any[] = [];
+try {
+  const res = await fetch(api);
+  const json = await res.json();
+  friends = json.content || [];
+} catch (e) {
+  console.error("友链 API 拉取失败", e);
+}
+
+/* 2. 映射字段，适配 FriendCard 的 props */
+const friendCards = friends.map((f) => ({
+  name: f.title,
+  avatar: f.icon,
+  description: f.description,
+  url: f.url,
+  type: "friend",
+  snapshot: f.snapshot, // 主题如未用到可忽略
+  feed: f.feed,
+  posts: f.posts || [],
+  labels: f.labels || [],
+}));
+
+/* 3. 展示案例站点（保持不变） */
+// const sites = [{ name: "Ryuchan Demo", url: "https://demo.131714.xyz/" }];
+
+const lines = [
+  "title: ZSXZSXの小站",
+  "url: https://boke.zsx815.top",
+  "icon: https://img-zsx.oss-cn-shanghai.aliyuncs.com/cb04a9a64f09bd4ba85d9908439653ed.jpg",
+  "description: 造化钟神秀，阴阳割昏晓。",
+  "screenshot: https://img-zsx.oss-cn-shanghai.aliyuncs.com/screen-shot-ryu.webp",
+  "feed: https://boke.zsx815.top/rss.xml",
+];
 ---
 
 <BaseLayout title="Friends">
   <CardGroup cols="1">
-    <MainCard
-      infoIcon="lucide:link"
-    >
+    <MainCard infoIcon="lucide:link">
       <div class="space-y-10">
-        <!-- Friends Section -->
+        <!-- 友链列表 -->
         <section>
           <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
             <Icon name="lucide:users" class="w-6 h-6 text-primary" />
@@ -26,48 +57,76 @@ const sites = [{ name: "Ryuchan Demo", url: "https://demo.131714.xyz/" }];
           </h2>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            <FriendCard
-              name="April"
-              avatar="https://picbed.xiaozhangya.xin/picbed/20250726061546364.png"
-              description="人间四月芳菲尽！"
-              url="https://www.zhaocloud.work"
-              type="friend"
-            />
-            <FriendCard
-              name="zzz"
-              avatar="https://zzz2929.github.io/PicGo/%E5%A4%B4%E5%83%8F.jpg"
-              description="冠以名则六欲泛生，止于此则七情方休。"
-              url="https://blog.904002.xyz"
-              type="friend"
-            />
-            <FriendCard
-              name="安知鱼"
-              avatar="https://npm.elemecdn.com/anzhiyu-blog-static@1.0.4/img/avatar.jpg"
-              description="生活明朗，万物可爱"
-              url="https://blog.anheyu.com/"
-              type="friend"
-            />
-            <FriendCard
-              name="YC"
-              avatar="https://picbed.xiaozhangya.xin/picbed/20250726181930154.png"
-              description="Creazing a better world with code."
-              url="https://github.com/ycyang004"
-              type="friend"
-            />
-            <FriendCard
-              name="kuncode"
-              avatar="https://www.kuncodeascension.fun/img/logo.jpg"
-              description="代码飞升"
-              url="https://www.kuncodeascension.fun"
-              type="friend"
-            />
+            {
+              friendCards.map((f) => (
+                <div class="relative">
+                  <FriendCard name={f.name} avatar={f.avatar} description={f.description} url={f.url} type={f.type} />
+                  {/* 最新文章折叠面板 */}
+                  {f.posts.length > 0 && (
+                    <details class="mt-3 group">
+                      <summary class="cursor-pointer text-sm text-base-content/70 hover:text-primary">
+                        最近文章{" "}
+                        <Icon name="lucide:chevron-down" class="inline w-4 h-4 group-open:rotate-180 transition" />
+                      </summary>
+                      <ul class="mt-2 space-y-1 text-sm text-base-content/80">
+                        {f.posts.slice(0, 3).map((p: any) => (
+                          <li>
+                            <a
+                              href={p.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="hover:text-primary line-clamp-1"
+                            >
+                              {p.title}
+                            </a>
+                            <span class="text-xs text-base-content/50">({p.published})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </div>
+              ))
+            }
           </div>
+
+          <!-- Small Circle 卡片块 -->
+          <section class="rounded-box border border-base-300 bg-base-200/60 p-4 sm:p-6 shadow-sm">
+            <h2 id="small-circle" class="text-xl font-bold mb-4 flex items-center gap-2">
+              <Icon name="mdi:wechat" class="w-5 h-5 text-primary" />
+              友链朋友圈
+            </h2>
+
+            <!-- 加载容器 -->
+            <div
+              id="friend-circle-lite-root"
+              class="not-prose min-h-[8rem] grid place-content-center text-sm text-base-content/60"
+            >
+              加载中...
+            </div>
+          </section>
+
+          <script>
+            import "@/assets/styles/fc.css";
+            import { FriendCircle } from "@/plugins/friendCircle";
+
+            const fc = new FriendCircle();
+            fc.init({
+              private_api_url: "https://fc.kemeow.top/",
+              page_turning_number: 10,
+              error_img: "https://cravatar.cn/avatar/57d8260dfb55501c37dde588e7c3852c",
+            });
+            fc.load();
+          </script>
+
           <div class="divider my-8">
             <Icon name="lucide:heart" class="w-10 h-10 text-primary" />
           </div>
         </section>
       </div>
     </MainCard>
+
+    <!-- 下方「Sites Using Ryuchan」保持不变 -->
     <Card>
       <div class="p-4 sm:p-6">
         <div class="space-y-10">
@@ -75,28 +134,83 @@ const sites = [{ name: "Ryuchan Demo", url: "https://demo.131714.xyz/" }];
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
               <h2 class="text-2xl font-bold flex items-center gap-2">
                 <Icon name="lucide:layout-template" class="w-6 h-6 text-primary" />
-                <span>Sites Using Ryuchan</span>
+                <span>加入我的友链~</span>
               </h2>
               <a
-                href="https://github.com/xz131714/Ryuchan/edit/main/src/pages/friend.astro"
+                href="https://github.com/kemiaofxjun/blog-friends"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="btn btn-sm btn-outline btn-primary gap-2"
               >
                 <Icon name="lucide:plus-circle" class="w-4 h-4" />
-                Add Your Site
+                添加你的友链
               </a>
             </div>
-            <p class="text-base-content/70 mb-6">
-              Here is a list of sites built with Ryuchan. Want to get your site listed? Click the "Add Your Site" button
-              in the top right to edit this page by submitting a Pull Request!
-            </p>
-            <div class="flex flex-wrap items-center gap-3">
-              {sites.map((site) => <Showcase name={site.name} url={site.url} />)}
+            <p class="text-base-content/70 mb-6">想要加入我的友链清仔细阅读我的友链仓库的说明~</p>
+            <div class="relative mock-code mb-6">
+              <button
+                class="btn btn-ghost btn-xs absolute top-2 right-2 gap-1"
+                aria-label="复制仓库地址"
+                data-copy={lines.join("\n")}
+              >
+                <Icon name="lucide:copy" class="w-4 h-4" />
+                <span class="text-xs">复制</span>
+              </button>
+              <pre class="language-text"><code set:html={lines.join("\n")} /></pre>
             </div>
           </section>
         </div>
       </div>
     </Card>
   </CardGroup>
+
+  <style>
+    /* 折叠图标旋转 */
+    details[open] summary .group-open\:rotate-180 {
+      transform: rotate(180deg);
+    }
+    .line-clamp-1 {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* 代码块底座 */
+    .mock-code {
+      @apply rounded-box bg-base-200 border border-base-300;
+      padding: 1rem 1.25rem 1rem 3.5rem; /* 留出行号区 */
+      position: relative;
+      overflow-x: auto;
+    }
+    /* 自动折行 */
+    .mock-code pre {
+      white-space: pre-wrap; /* 保留换行 + 自动折行 */
+      word-break: break-all;
+    }
+    /* 行号 */
+    .mock-code::before {
+      content: counter(line-number);
+      counter-reset: line-number 1;
+      @apply absolute left-4 top-0 bottom-0 flex items-center text-base-content/40 text-sm;
+    }
+    /* 复制按钮 */
+    .mock-code button {
+      @apply opacity-60 hover:opacity-100 transition;
+    }
+  </style>
+
+  <script>
+    /* 一键复制 */
+    document.querySelectorAll("[data-copy]").forEach((btn: HTMLButtonElement) => {
+      btn.addEventListener("click", () => {
+        const text = btn.dataset.copy || "";
+        navigator.clipboard.writeText(text).then(() => {
+          const span = btn.querySelector("span");
+          if (!span) return;
+          const old = span.textContent;
+          span.textContent = "已复制";
+          setTimeout(() => (span.textContent = old), 1200);
+        });
+      });
+    });
+  </script>
 </BaseLayout>
