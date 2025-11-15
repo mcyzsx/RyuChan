@@ -1,0 +1,130 @@
+---
+export const prerender = true;
+
+import { scanAlbums } from "@/utils/album-scanner";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Card from "@/components/temple/Card.astro";
+import CardGroup from "@/components/temple/CardGroup.astro";
+import { Icon } from "astro-icon/components";
+import FancyboxInit from "@/components/FancyboxInit.astro"; // ① 客户端组件
+
+export async function getStaticPaths() {
+  const albums = await scanAlbums();
+  return albums.map((a) => ({ params: { id: a.id }, props: { album: a } }));
+}
+const { album } = Astro.props;
+---
+
+<BaseLayout title={album.title}>
+  <FancyboxInit />
+  <!-- 放最顶部，跟着 DOM 走 -->
+
+  <CardGroup cols="1">
+    <Card>
+      <div class="p-4 sm:p-6 space-y-6">
+        <!-- 头部 -->
+        <div class="flex items-center gap-2">
+          <a href="/albums/" class="btn btn-ghost btn-sm btn-circle">
+            <Icon name="lucide:arrow-left" />
+          </a>
+          <h1 class="text-2xl font-bold">{album.title}</h1>
+        </div>
+
+        {album.description && <p class="text-base-content/80">{album.description}</p>}
+
+        <!-- 元数据 -->
+        <div class="flex flex-wrap items-center gap-4 text-sm text-base-content/60">
+          <span>{album.photos.length} 张</span>
+          <time>{new Date(album.date).toLocaleDateString("zh-CN")}</time>
+          {
+            album.location && (
+              <span class="flex items-center gap-1">
+                <Icon name="lucide:map-pin" class="w-4 h-4" />
+                {album.location}
+              </span>
+            )
+          }
+        </div>
+
+        <!-- 标签 -->
+        {
+          album.tags && album.tags.length > 0 && (
+            <div class="flex flex-wrap gap-2">
+              {album.tags.map((t) => (
+                <span class="btn btn-xs btn-outline">{t}</span>
+              ))}
+            </div>
+          )
+        }
+
+        <!-- Masonry 照片墙（默认锁点击） -->
+        <div class="masonry-grid" data-ready="false">
+          {
+            album.photos.map((p) => (
+              <figure
+                class="break-inside-avoid mb-2"
+                data-description={p.description}
+                data-dimensions={`${p.width || "?"} × ${p.height || "?"}`}
+                data-location={p.location}
+                data-tags={p.tags?.join(",")}
+              >
+                <a
+                  href={p.src}
+                  data-fancybox="gallery"
+                  data-caption={p.title || p.alt}
+                  class="block rounded-box overflow-hidden border border-base-300"
+                >
+                  <img
+                    src={p.src}
+                    alt={p.alt}
+                    width={p.width}
+                    height={p.height}
+                    class="w-full h-auto block"
+                    loading="lazy"
+                  />
+                </a>
+              </figure>
+            ))
+          }
+        </div>
+      </div>
+    </Card>
+  </CardGroup>
+</BaseLayout>
+
+<style>
+  /* 点击锁定 + 解锁 */
+  .masonry-grid:not([data-ready]) {
+    position: relative;
+    pointer-events: none; /* 禁止点击 */
+    cursor: wait;
+  }
+  .masonry-grid:not([data-ready])::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+  }
+  .masonry-grid[data-ready] {
+    pointer-events: auto;
+  }
+
+  /* masonry 响应式 */
+  .masonry-grid {
+    column-count: 3;
+    column-gap: 0.5rem;
+  }
+  @media (max-width: 1024px) {
+    .masonry-grid {
+      column-count: 2;
+    }
+  }
+  @media (max-width: 640px) {
+    .masonry-grid {
+      column-count: 1;
+    }
+  }
+  .break-inside-avoid {
+    break-inside: avoid;
+  }
+</style>

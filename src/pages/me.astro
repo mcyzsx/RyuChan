@@ -34,7 +34,7 @@ const BIRTH_YEAR = 2005;
     title="关于我"
     description="我的关于页面"
     textOverlay="ABOUT"
-    image="https://img-api.zsx815.top/mc-pc"
+    image="/image/me-banner.webp"
     infoIcon="lucide:user"
   >
     <div class="space-y-10 mb-8">
@@ -204,6 +204,26 @@ const BIRTH_YEAR = 2005;
           <Icon name="ph:address-book-bold" class="absolute right-4 bottom-4 w-16 h-16 text-base-content/10" />
         </div>
 
+        <!-- 正在听 -->
+        <div class="sm:col-span-2 lg:col-span-3 card card-bordered p-6 relative">
+          <span class="absolute top-4 left-6 text-xs text-base-content/60">正在听</span>
+
+          <!-- 播放器容器 -->
+          <div class="mt-8 flex justify-center">
+            <div
+              id="nmp"
+              class="netease-mini-player"
+              data-playlist-id="13681647281"
+              data-lyric="true"
+              data-theme="auto"
+              data-size="compact"
+            >
+            </div>
+          </div>
+
+          <Icon name="ph:music-notes-simple-bold" class="absolute right-4 bottom-4 w-16 h-16 text-base-content/10" />
+        </div>
+
         <!-- 网站统计 -->
         <div class="sm:col-span-2 lg:col-span-3 card card-bordered p-6 relative">
           <span class="absolute top-4 left-6 text-xs text-base-content/60">网站统计</span>
@@ -253,4 +273,27 @@ const BIRTH_YEAR = 2005;
       set("#visit-today", visit);
     } catch {}
   })();
+
+  // 如果播放器把初始化函数挂在全局，直接调用
+  function initNMP() {
+    const w = window as any;
+    if (typeof w.NeteaseMiniPlayer !== "undefined") {
+      w.NeteaseMiniPlayer.init(); // 常见 API 名称
+    } else if (typeof w.initNMP === "function") {
+      w.initNMP(); // 个别版本
+    } else {
+      // 有的版本会自动扫描 DOM，什么都不用做
+      console.log("[NMP] 未发现显式初始化函数，已交由插件自动扫描");
+    }
+  }
+
+  // 保险：DOM 就绪 + 脚本加载完成
+  function ready() {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initNMP);
+    } else {
+      initNMP();
+    }
+  }
+  ready();
 </script>

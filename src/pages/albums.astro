@@ -1,0 +1,54 @@
+---
+// 1. 数据获取（完全复用 Mizuki 的逻辑）
+// import { siteConfig } from "@/config"; // 路径按你工程实际来写
+import { scanAlbums } from "@/utils/album-scanner";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Card from "@/components/temple/Card.astro";
+import CardGroup from "@/components/temple/CardGroup.astro";
+import { Icon } from "astro-icon/components";
+
+// if (!siteConfig.featurePages?.albums) return Astro.redirect("/404/");
+const albums = await scanAlbums();
+---
+
+<BaseLayout title="相册">
+  <CardGroup cols="1">
+    <Card>
+      <div class="p-4 sm:p-6 space-y-6">
+        <!-- 标题 -->
+        <h1 class="text-2xl font-bold flex items-center gap-2">
+          <Icon name="lucide:image" class="w-6 h-6 text-primary" />
+          相册
+        </h1>
+
+        <!-- 相册网格 -->
+        {
+          albums.length ? (
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {albums.map((a) => (
+                <a
+                  href={`/albums/${a.id}/`}
+                  class="group block rounded-box border border-base-300 bg-base-100 overflow-hidden hover:shadow-lg transition"
+                >
+                  <img src={a.cover} alt={a.title} class="w-full h-40 object-cover group-hover:scale-105 transition" />
+                  <div class="p-3">
+                    <h3 class="font-semibold">{a.title}</h3>
+                    {a.description && <p class="text-sm text-base-content/70 line-clamp-2 mt-1">{a.description}</p>}
+                    <div class="text-xs text-base-content/50 mt-2">
+                      {a.photos.length} 张 · {new Date(a.date).toLocaleDateString("zh-CN")}
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-10 text-base-content/60">
+              <Icon name="lucide:image-off" class="w-12 h-12 mx-auto mb-2" />
+              <p>还没有相册，快去创建吧~</p>
+            </div>
+          )
+        }
+      </div>
+    </Card>
+  </CardGroup>
+</BaseLayout>

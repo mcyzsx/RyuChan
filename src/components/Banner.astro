@@ -1,10 +1,5 @@
 ---
-import {
-  BANNER_IMAGES,
-  BANNER_HEIGHT,
-  SITE_PAGES,
-  TYPEWRITER_TEXTS,
-} from "@config";
+import { BANNER_IMAGES, BANNER_HEIGHT, SITE_PAGES, TYPEWRITER_TEXTS } from "@config";
 
 export interface Props {
   title?: string;
@@ -18,14 +13,14 @@ const currentPath = Astro.url.pathname;
 let pageKey = "home";
 if (currentPath === "/") {
   pageKey = "home";
-} else if (currentPath === "/about") {
+} else if (currentPath === "/me") {
   pageKey = "about";
 } else if (
   currentPath.startsWith("/post/") &&
   !currentPath.includes("/post/page/") &&
   currentPath !== "/blog" &&
-  !currentPath.includes("/post/tag/") &&
-  !currentPath.includes("/post/category/")
+  !currentPath.includes("/blog/tag/") &&
+  !currentPath.includes("/blog/category/")
 ) {
   pageKey = "home"; // 博客详情页也用 home 配置
 } else {
@@ -34,22 +29,21 @@ if (currentPath === "/") {
 }
 
 const cleanPageKey = pageKey.replace(/\/$/, "");
-const pageConfig =
-  SITE_PAGES[cleanPageKey] ?? SITE_PAGES[pageKey] ?? SITE_PAGES["home"];
+const pageConfig = SITE_PAGES[cleanPageKey] ?? SITE_PAGES[pageKey] ?? SITE_PAGES["home"];
 const useLargeFont =
   pageKey === "home" ||
   (currentPath.startsWith("/post/") &&
     !currentPath.includes("/post/page/") &&
     currentPath !== "/blog" &&
-    !currentPath.includes("/post/tag/") &&
-    !currentPath.includes("/post/category/"));
+    !currentPath.includes("/blog/tag/") &&
+    !currentPath.includes("/blog/category/"));
 const useTypewriter =
   pageKey === "home" ||
   (currentPath.startsWith("/post/") &&
     !currentPath.includes("/post/page/") &&
     currentPath !== "/blog" &&
-    !currentPath.includes("/post/tag/") &&
-    !currentPath.includes("/post/category/"));
+    !currentPath.includes("/blog/tag/") &&
+    !currentPath.includes("/blog/category/"));
 const displayTitle = pageConfig.title || "";
 const displaySubtitle = pageConfig.subtitle || "";
 const hasTitle = displayTitle !== undefined && displayTitle !== "";
@@ -68,11 +62,7 @@ const bannerHeight = BANNER_HEIGHT;
       <ul id="carousel_imgs">
         {
           carouselImgsList.map((img, index) => (
-            <li
-              class="item"
-              style={{ animationDelay: `${index * 6}s` }}
-              data-background-image={img}
-            />
+            <li class="item" style={{ animationDelay: `${index * 6}s` }} data-background-image={img} />
           ))
         }
       </ul>
@@ -85,21 +75,13 @@ const bannerHeight = BANNER_HEIGHT;
           <div class="absolute left-1/2 top-1/2 w-4/5 -translate-x-1/2 -translate-y-1/2 lg:w-3/4">
             <div class="flex flex-col">
               {hasTitle && (
-                <h1
-                  class={`title ${useLargeFont ? "text-6xl lg:text-8xl" : "text-4xl lg:text-6xl"}`}
-                >
+                <h1 class={`title ${useLargeFont ? "text-6xl lg:text-8xl" : "text-4xl lg:text-6xl"}`}>
                   {displayTitle}
                 </h1>
               )}
               {hasSubtitle && (
-                <h2
-                  class={`subtitle ${useLargeFont ? "text-2xl lg:text-4xl" : "text-lg lg:text-2xl"}`}
-                >
-                  {useTypewriter ? (
-                    <span id="typewriter-text">{displaySubtitle}</span>
-                  ) : (
-                    displaySubtitle
-                  )}
+                <h2 class={`subtitle ${useLargeFont ? "text-2xl lg:text-4xl" : "text-lg lg:text-2xl"}`}>
+                  {useTypewriter ? <span id="typewriter-text">{displaySubtitle}</span> : displaySubtitle}
                 </h2>
               )}
             </div>
@@ -120,10 +102,7 @@ const bannerHeight = BANNER_HEIGHT;
       shape-rendering="auto"
     >
       <defs>
-        <path
-          id="gentle-wave"
-          d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"
-        ></path>
+        <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"></path>
       </defs>
       <g class="parallax">
         <use
@@ -144,11 +123,7 @@ const bannerHeight = BANNER_HEIGHT;
           y="5"
           class="opacity-75"
           style={{ animationDelay: "-4s", animationDuration: "13s" }}></use>
-        <use
-          xlink:href="#gentle-wave"
-          x="48"
-          y="7"
-          style={{ animationDelay: "-5s", animationDuration: "20s" }}></use>
+        <use xlink:href="#gentle-wave" x="48" y="7" style={{ animationDelay: "-5s", animationDuration: "20s" }}></use>
       </g>
     </svg>
   </div>
@@ -176,10 +151,7 @@ const bannerHeight = BANNER_HEIGHT;
 
       if (isDeleting) {
         // 删除字符
-        typewriterElement.textContent = currentText.substring(
-          0,
-          currentCharIndex - 1,
-        );
+        typewriterElement.textContent = currentText.substring(0, currentCharIndex - 1);
         currentCharIndex--;
 
         if (currentCharIndex === 0) {
@@ -192,10 +164,7 @@ const bannerHeight = BANNER_HEIGHT;
         setTimeout(typeWriter, deleteSpeed);
       } else {
         // 添加字符
-        typewriterElement.textContent = currentText.substring(
-          0,
-          currentCharIndex + 1,
-        );
+        typewriterElement.textContent = currentText.substring(0, currentCharIndex + 1);
         currentCharIndex++;
 
         if (currentCharIndex === currentText.length) {
@@ -224,36 +193,35 @@ const bannerHeight = BANNER_HEIGHT;
     const carouselImgsCount = carouselImgs?.children.length ?? 0;
 
     if (carouselImgsCount > 0) {
-      const carouselAnimation = `    
-      @keyframes carousel-animation {    
-        0% {    
-          opacity: 0;    
-          transform: scale(1);    
-        }    
-        3% {    
-          opacity: 1;    
-        }    
-        8% {    
-          opacity: 1;    
-          animation-timing-function: ease-out;    
-        }    
-        ${100 / carouselImgsCount}% {    
-          opacity: 1;    
-        }    
-        ${100 / carouselImgsCount + 50 / carouselImgsCount}% {    
-          opacity: 0;    
-          animation-timing-function: ease-out;    
-        }    
-        100% {    
-          opacity: 0;    
-          transform: scale(2);    
-        }    
-      }    
+      const carouselAnimation = `
+      @keyframes carousel-animation {
+        0% {
+          opacity: 0;
+          transform: scale(1);
+        }
+        3% {
+          opacity: 1;
+        }
+        8% {
+          opacity: 1;
+          animation-timing-function: ease-out;
+        }
+        ${100 / carouselImgsCount}% {
+          opacity: 1;
+        }
+        ${100 / carouselImgsCount + 50 / carouselImgsCount}% {
+          opacity: 0;
+          animation-timing-function: ease-out;
+        }
+        100% {
+          opacity: 0;
+          transform: scale(2);
+        }
+      }
       `;
       styleElement.textContent = carouselAnimation;
       let bannerElement = document.getElementById("banner");
-      if (bannerElement && !bannerElement.querySelector("style"))
-        bannerElement.appendChild(styleElement);
+      if (bannerElement && !bannerElement.querySelector("style")) bannerElement.appendChild(styleElement);
     }
 
     // 设置背景图片
@@ -285,8 +253,7 @@ const bannerHeight = BANNER_HEIGHT;
 
   .carousel .item {
     @apply absolute left-0 top-0 z-0 h-full w-full origin-center bg-cover bg-center bg-no-repeat opacity-0;
-    animation: carousel-animation var(--carouselAnimationTime) linear infinite
-      0s;
+    animation: carousel-animation var(--carouselAnimationTime) linear infinite 0s;
     backface-visibility: hidden;
     transform-style: preserve-3d;
   }

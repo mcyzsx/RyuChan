@@ -14,14 +14,13 @@ site:
     pageSize: 8 # 每页显示的文章数量
   banner:  
     images:  
-      - "/image/banner/1.png"  
-      - "/image/banner/2.png"  
-      - "/image/banner/3.png"  
-      - "/image/banner/4.png"  
-      - "/image/banner/5.png"  
-      - "/image/banner/6.png"  
-      - "/image/banner/7.png"  
-      - "/image/banner/8.png"  
+      - "/image/banner/1.webp"  
+      - "/image/banner/2.webp"  
+      - "/image/banner/3.webp"  
+      - "/image/banner/4.webp"  
+      - "/image/banner/5.webp"  
+      - "/image/banner/6.webp"  
+ 
     height: "60vh"
   # Banner 页面标题配置
   pages:
@@ -59,6 +58,11 @@ site:
       href: /navigation  
       svg: "material-symbols:explore-outline"  
       target: _self
+    - id: friend
+      text: 友人帐
+      href: /friend
+      svg: "material-symbols:supervisor-account-outline-rounded"
+      target: _self
     # - id: blog
     #   text: 博客
     #   href: /blog
@@ -72,50 +76,51 @@ site:
       #     target: _self
       #   - id: course
       #     text: 教程
-      #     href: /post/category/Course
+      #     href: /blog/category/Course
       #     svg: "material-symbols:book-outline"
       #     target: _self
       #   - id: anime  
       #     text: 动漫  
-      #     href: /post/category/Anime  
+      #     href: /blog/category/Anime  
       #     svg: "material-symbols:movie-outline"  
       #     target: _self 
       #   - id: tv  
       #     text: TV  
-      #     href: /post/category/TV  
+      #     href: /blog/category/TV  
       #     svg: "material-symbols:movie-outline"  
       #     target: _self 
       #   - id: documentation
       #     text: 文章
-      #     href: /post/category/Documentation
+      #     href: /blog/category/Documentation
       #     svg: "material-symbols:unknown-document-outline-rounded"
       #     target: _self
         # - id: examples
         #   text: Examples
-        #   href: /post/category/Examples
+        #   href: /blog/category/Examples
         #   svg: "material-symbols:deployed-code-outline"
         #   target: _self
         # 子菜单项配置
-    - id: anime  
-      text: 追番  
-      href: /anime  
-      svg: "material-symbols:movie-outline"  
-      target: _self 
-    - id: project
-      text: 项目
-      href: /project
-      svg: "material-symbols:code-blocks-outline"
+    - id: page
+      text: 我的
+      href: #
+      svg: "mdi:web"
       target: _self
-    - id: friend
-      text: 友人帐
-      href: /friend
-      svg: "material-symbols:supervisor-account-outline-rounded"
-      target: _self
-    - id: about
-      text: 关于
-      href: /about
-      svg: "material-symbols:info-outline-rounded"
-      target: _self
+      subItems:
+        - id: about
+          text: 关于
+          href: /me
+          svg: "material-symbols:info-outline-rounded"
+          target: _self
+        - id: anime
+          text: 追番
+          href: /anime
+          svg: "material-symbols:movie-outline" 
+          target: _self
+        - id: project
+          text: 项目
+          href: /project
+          svg: "material-symbols:code-blocks-outline"
+          target: _self
     # - id: contact
     #   text: Contact
     #   href: "mailto:contact.evesunmaple@outlook.com"
@@ -180,7 +185,7 @@ user:
 # 评论系统配置
 comments:
   enable: true # 是否启用评论
-  type: giscus # giscus/waline/none
+  type: waline # giscus/waline/none
   giscus:
     repo: "xz131714/gsc"
     repoId: "R_kgDOPTM-mA"
@@ -193,7 +198,7 @@ comments:
     emitMetadata: "0"
     loading: "lazy"
   waline:
-    serverURL: "https://your-waline-server"
+    serverURL: "https://ryuchan-comment.zsx815.top"
     lang: "zh-CN"
     emoji:
       - "https://unpkg.com/@waline/emojis@1.1.0/weibo"

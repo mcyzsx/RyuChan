@@ -1,0 +1,77 @@
+---
+export type VideoType = "raw" | "bilibili" | "bilibili-nano" | "youtube" | "douyin" | "douyin-wide" | "tiktok";
+
+export interface Props {
+  type?: VideoType;
+  id: string;
+  autoplay?: boolean;
+  ratio?: string | number;
+  poster?: string;
+  width?: string;
+}
+
+const {
+  type = "raw",
+  id,
+  autoplay = false,
+  ratio = "16 / 9", // ✅ 16:9
+  poster,
+  width = "480px", // ✅ 迷你宽度
+} = Astro.props;
+
+const src = (() => {
+  switch (type) {
+    case "bilibili":
+      return `https://player.bilibili.com/player.html?bvid=${id}&autoplay=${autoplay}`;
+    case "bilibili-nano":
+      return `https://www.bilibili.com/blackboard/newplayer.html?bvid=${id}&autoplay=${autoplay}`;
+    case "youtube":
+      return `https://www.youtube.com/embed/${id}?rel=0&disablekb=1&playsinline=1&autoplay=${autoplay}`;
+    case "douyin":
+    case "douyin-wide":
+      return `https://open.douyin.com/player/video?vid=${id}`;
+    case "tiktok":
+      return `https://www.tiktok.com/embed/v3/${id}`;
+    default:
+      return id;
+  }
+})();
+---
+
+<div
+  class="video-tiny-169"
+  style={`
+    aspect-ratio:${ratio};
+    max-width:${width};
+  `}
+>
+  {
+    type === "raw" ? (
+      <video src={src} poster={poster} controls />
+    ) : (
+      <iframe
+        src={src}
+        scrolling="no"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      />
+    )
+  }
+</div>
+
+<style>
+  .video-tiny-169 {
+    width: 100%;
+    margin: 0 auto;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+  .video-tiny-169 iframe,
+  .video-tiny-169 video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>
