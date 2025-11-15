@@ -29,3 +29,5 @@ public/pagefind/
 # pnpm store
 pnpm-store/
 .env
+
+.vercel
