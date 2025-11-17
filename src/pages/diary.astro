@@ -34,7 +34,7 @@ function processText(text: string): string {
   return text.replace(/<br>/g, "<br>").replace(/<b>(.*?)<\/b>/g, "<strong>$1</strong>");
 }
 
-/* ===== 新增：把 music 统一转成 <meting-js> ===== */
+/* ===== 音乐渲染 ===== */
 import type { MusicItem } from "@/data/diary";
 function renderMusic(music?: MusicItem | MusicItem[]) {
   if (!music) return "";
@@ -46,10 +46,18 @@ function renderMusic(music?: MusicItem | MusicItem[]) {
 
 const title = "日记";
 const description = "记录生活点滴，分享日常感悟。";
+
+/* 1. 提前注入 <head>，保证首屏就加载 */
+const extraHead = (
+  <>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js" data-astro></script>
+    <script src="https://cdn.jsdelivr.net/npm/meting@2.0.1/dist/Meting.min.js" data-astro></script>
+  </>
+);
 ---
 
-<BaseLayout title={title}>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" />
+<BaseLayout title={title} head={extraHead}>
   <CardGroup cols="1">
     <MainCard infoIcon="lucide:book-open">
       <div class="space-y-6">
@@ -184,9 +192,7 @@ const description = "记录生活点滴，分享日常感悟。";
           </div>
           <div class="stat">
             <div class="stat-title">最近更新</div>
-            <div class="stat-value text-sm">
-              {diaryEntries[0] ? formatDate(diaryEntries[0].date) : "-"}
-            </div>
+            <div class="stat-value text-sm">{diaryEntries[0] ? formatDate(diaryEntries[0].date) : "-"}</div>
           </div>
         </div>
       </div>
@@ -204,9 +210,8 @@ const description = "记录生活点滴，分享日常感悟。";
   }
 </BaseLayout>
 
-<!-- 图片放大 & 音乐播放器所需资源 -->
+<!-- 仅保留图片放大脚本，音乐资源已提前加载 -->
 <script>
-  /* ======== 图片放大不变 ======== */
   document.addEventListener("click", (e) => {
     const img = (e.target as HTMLElement).closest(".image-container img");
     if (!img) return;
@@ -225,17 +230,4 @@ const description = "记录生活点滴，分享日常感悟。";
     document.body.appendChild(modal);
     modal.addEventListener("click", () => modal.remove());
   });
-
-  /* ======== 音乐播放器：只加载一次 ======== */
-  function loadPlayer() {
-    // 只加载 JS，CSS 已提前引入
-    if ((window as any).APlayer && (window as any).Meting) return;
-    const js1 = document.createElement("script");
-    js1.src = "https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js";
-    const js2 = document.createElement("script");
-    js2.src = "https://cdn.jsdelivr.net/npm/meting@2.0.1/dist/Meting.min.js";
-    js1.onload = () => document.head.appendChild(js2);
-    document.head.appendChild(js1);
-  }
-  document.addEventListener("DOMContentLoaded", loadPlayer);
 </script>
