@@ -1,0 +1,40 @@
+---
+// props 类型
+export interface Props {
+  server: string; // 音乐平台，如"netease"
+  type: string; // "song" | "album" | "playlist" ...
+  id: string; // 对应 id
+  autoplay?: boolean; // 是否自动播放
+}
+
+const { server, type, id, autoplay = false } = Astro.props;
+---
+
+<meting-js server={server} type={type} id={id} autoplay={autoplay ? "true" : "false"}></meting-js>
+
+<!-- 样式 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" />
+
+<!-- 库加载逻辑：只跑一次 -->
+<script>
+  // 如果全局已有，说明加载过了
+  if (!(window as any).APlayer || !(window as any).Meting) {
+    const load = () => {
+      const js1 = document.createElement("script");
+      js1.src = "https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js";
+
+      const js2 = document.createElement("script");
+      js2.src = "https://cdn.jsdelivr.net/npm/meting@2.0.1/dist/Meting.min.js";
+
+      js1.onload = () => document.head.appendChild(js2);
+      document.head.appendChild(js1);
+    };
+
+    // 保险：如果 DOM 已 ready 就直接跑，否则等
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", load);
+    } else {
+      load();
+    }
+  }
+</script>
