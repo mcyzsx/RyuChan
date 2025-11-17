@@ -1,7 +1,7 @@
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import tailwind from "@astrojs/tailwind";
-import vercel from "@astrojs/vercel"; // 或 vercel/edge，看你需求
+import vercel from "@astrojs/vercel/serverless"; // 或 vercel/edge，看你需求
 import playformCompress from "@playform/compress";
 import terser from "@rollup/plugin-terser";
 import icon from "astro-icon";

@@ -1,0 +1,240 @@
+---
+export interface Props {
+  siteName: string;
+  sitenick?: string;
+  siteUrl: string;
+  siteDesc?: string;
+  siteIcon?: string;
+  date?: string;
+  upstream?: boolean;
+  recommend?: boolean;
+  qrcode?: string;
+}
+
+const {
+  siteName,
+  sitenick = siteName,
+  siteUrl,
+  siteDesc = "",
+  siteIcon,
+  date,
+  upstream = false,
+  recommend = false,
+  qrcode = "",
+} = Astro.props;
+
+const showQR = qrcode && qrcode !== "";
+---
+
+<div class="friend-card">
+  <!-- 打孔 -->
+  <div class="punch"></div>
+
+  <!-- 顶部 -->
+  <header>
+    <h3 class="title">{sitenick}</h3>
+    {siteIcon && <img class="icon" src={siteIcon} alt={siteName} loading="lazy" />}
+  </header>
+
+  <!-- 主体 -->
+  <main>
+    <p class="author">{siteName}</p>
+    <p class="desc">{siteDesc}</p>
+  </main>
+
+  <!-- 左下角二维码 -->
+  {showQR && <img class="qrcode" src={qrcode} alt="qr" onclick={`window.__openQR('${qrcode}')`} />}
+
+  <!-- 右下角日期 / 角标 -->
+  <aside class="extras">
+    {date && <time class="date">{date}</time>}
+    {
+      (upstream || recommend) && (
+        <img
+          class="corner"
+          src={`https://cdn.atao.cyou/Web/${upstream ? "upstream" : "recommend"}.png`}
+          alt={upstream ? "upstream" : "recommend"}
+        />
+      )
+    }
+  </aside>
+
+  <!-- 底部指示器 -->
+  <a class="indicator" href={siteUrl} target="_blank" rel="noopener">
+    <span>前往网站</span><span>→</span>
+  </a>
+</div>
+
+<script>
+  (window as any).__openQR = (src: string) => {
+    const box = document.createElement("div");
+    box.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:9999`;
+    box.innerHTML = `
+      <div style="background:var(--c-bg-soft);padding:30px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+        <img src="${src}" style="width:280px;height:280px"/>
+        <button onclick="this.closest('div').parentElement.remove()" style="position:absolute;top:8px;right:8px;width:32px;height:32px;border:none;background:var(--c-bg-soft);border-radius:50%;font-size:20px;cursor:pointer">×</button>
+      </div>`;
+    document.body.appendChild(box);
+  };
+</script>
+
+<style>
+  /* 卡片基础 - 与 GitHub 卡片保持一致 */
+  .friend-card {
+    --w: 320px;
+    --h: 210px;
+    width: var(--w);
+    height: var(--h);
+    background: var(--ld-bg-card, var(--c-bg-1));
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px var(--c-border, hsl(var(--b3) / 0.2));
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform 0.2s ease;
+    overflow: hidden;
+  }
+  html.dark .friend-card {
+    background: var(--c-bg-soft, var(--c-bg-2));
+  }
+  .friend-card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* 打孔 */
+  .punch {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.2),
+      inset 0 -1px 1px rgba(255, 255, 255, 0.1),
+      0 0 0 1px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+  }
+  html.dark .punch {
+    box-shadow:
+      inset 0 1px 3px #000,
+      inset 0 -1px 1px rgba(255, 255, 255, 0.05),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  /* 顶部 */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--c-text, hsl(var(--bc)));
+    font-family: "ChillHuoSong_F", serif;
+  }
+  .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  /* 主体 */
+  main {
+    flex: 1;
+    min-height: 0;
+  }
+  .author {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--c-text, hsl(var(--bc)));
+    margin: 0 0 4px;
+  }
+  .desc {
+    font-size: 14px;
+    color: var(--c-text-2, hsl(var(--bc) / 0.6));
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-all;
+  }
+
+  /* 左下角二维码 */
+  .qrcode {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .qrcode:hover {
+    transform: scale(1.05);
+  }
+
+  /* 右下角日期 / 角标 */
+  .extras {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .date {
+    font-size: 11px;
+    color: var(--c-text-3, hsl(var(--bc) / 0.5));
+    white-space: nowrap;
+  }
+  .corner {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    transform: rotate(-10deg);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  }
+  html.dark .corner {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  }
+
+  /* 底部指示器 */
+  .indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    height: 18px;
+    padding: 0 10px;
+    background: rgba(100, 116, 139, 0.7);
+    color: #f8fafc;
+    border-radius: 6px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: all 0.12s ease;
+    pointer-events: none;
+  }
+  html.dark .indicator {
+    background: rgba(148, 163, 184, 0.7);
+    color: #0f172a;
+  }
+  a.indicator {
+    pointer-events: auto;
+  }
+  .friend-card:hover .indicator {
+    opacity: 0.8;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>

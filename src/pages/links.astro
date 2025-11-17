@@ -1,0 +1,185 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import MainCard from "@/components/MainCard.astro";
+import Card from "@/components/temple/Card.astro";
+import CardGroup from "@/components/temple/CardGroup.astro";
+import { Icon } from "astro-icon/components";
+import FriendLinkCard from "@/components/FriendLinkCard.astro";
+
+/* 1. 读取分组数据（与 feeds.ts 同一格式） */
+import feeds from "@/data/feeds";
+
+/* 2. 构造「我的博客信息」常量，方便一键复制 */
+const myFeed = {
+  author: "Ryuchan",
+  title: "RyuChan Blog",
+  desc: "一个基于 Astro 的轻量级博客主题。",
+  link: "https://github.com/xz131714/Ryuchan",
+  avatar: "https://avatars.githubusercontent.com/u/52538259?v=4",
+};
+const copyFields = {
+  博主: myFeed.author,
+  标题: myFeed.title,
+  介绍: myFeed.desc,
+  网址: myFeed.link,
+  头像: myFeed.avatar,
+};
+
+/* 3. 默认选中第一个分组 */
+const activeCategory = feeds[0]?.name ?? "";
+---
+
+<BaseLayout title="朋友们">
+  <CardGroup cols="1">
+    <MainCard infoIcon="lucide:link">
+      <div class="space-y-10">
+        <!-- ① 我的博客信息 -->
+        <section>
+          <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Icon name="lucide:user" class="w-6 h-6 text-primary" />
+            <span>我的博客</span>
+          </h2>
+          <div
+            class="my-blog-card"
+            style="background:var(--ld-bg-card);border:1px solid var(--c-border);border-radius:16px;padding:2rem;box-shadow:0 4px 20px var(--ld-shadow);max-width:800px;margin:0 auto;"
+          >
+            <div class="flex items-center gap-4 mb-4">
+              <div class="relative">
+                <img
+                  src={myFeed.avatar}
+                  alt={myFeed.author}
+                  class="w-16 h-16 rounded-xl object-cover border-2 border-primary"
+                />
+                <span class="absolute -top-2 -right-2 bg-primary text-white text-xs px-2 py-0.5 rounded-full">博主</span
+                >
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold">{myFeed.author}</h3>
+                <p class="text-sm text-base-content/70">{myFeed.title}</p>
+              </div>
+            </div>
+            <p class="text-sm text-base-content/80 mb-4 border-l-4 border-primary pl-3">{myFeed.desc}</p>
+            <div class="flex flex-wrap gap-2">
+              {
+                Object.entries(copyFields).map(([k, v]) => (
+                  <button
+                    class="btn btn-outline btn-primary btn-sm gap-1"
+                    onclick={`navigator.clipboard.writeText('${v}').then(()=>alert('已复制${k}'))`}
+                  >
+                    <Icon name="lucide:copy" class="w-3 h-3" />
+                    {k}
+                  </button>
+                ))
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- ② 友链分类 -->
+        <section>
+          <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+            <Icon name="lucide:users" class="w-6 h-6 text-primary" />
+            <span>朋友们</span>
+          </h2>
+          <div class="flex flex-wrap gap-2 mb-6">
+            {
+              feeds.map((g) => (
+                <button
+                  class={`category-tab ${g.name === activeCategory ? "active" : ""}`}
+                  onclick={`document.getElementById('feed-${g.name}').scrollIntoView({behavior:'smooth'});`}
+                >
+                  {g.name}
+                </button>
+              ))
+            }
+          </div>
+
+          {/* ③ 分组渲染 */}
+          {
+            feeds.map((group) => (
+              <div id={`feed-${group.name}`} class="mb-8">
+                <h3 class="text-lg font-semibold mb-3 text-primary">{group.name}</h3>
+                <div class="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4">
+                  {group.entries.map((e) => (
+                    <FriendLinkCard
+                      siteName={e.author}
+                      sitenick={e.sitenick ?? e.author}
+                      siteUrl={e.link}
+                      siteDesc={e.desc ?? ""}
+                      siteIcon={e.avatar}
+                      date={e.date}
+                      upstream={e.upstream ?? false}
+                      recommend={e.recommend ?? false}
+                      qrcode={e.qrcode ?? ""}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
+          }
+        </section>
+
+        <!-- ③ 申请友链 -->
+        <section>
+          <Card>
+            <div class="p-4 sm:p-6">
+              <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
+                <Icon name="lucide:plus-circle" class="w-6 h-6 text-primary" />
+                <span>申请友链</span>
+              </h2>
+              <div class="space-y-4 text-sm text-base-content/80">
+                <div>
+                  <h3 class="font-semibold text-base-content mb-2">要求</h3>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>能够长期更新维护，并输出有价值的原创内容；</li>
+                    <li>
+                      可参考 <a
+                        class="link link-primary"
+                        href="https://www.travellings.cn/docs/join.html"
+                        target="_blank">开往</a
+                      > 规则。
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-base-content mb-2">方式</h3>
+                  <p>在评论区留言或发送邮件至：</p>
+                  <div class="inline-flex items-center gap-2 mt-2 px-3 py-2 rounded-lg bg-base-200">
+                    <span class="font-mono">qiatao0305@163.com</span>
+                    <button
+                      class="btn btn-outline btn-primary btn-xs"
+                      onclick={`navigator.clipboard.writeText('qiatao0305@163.com').then(()=>alert('已复制邮箱'))`}
+                    >
+                      复制
+                    </button>
+                  </div>
+                  <p class="mt-2">
+                    邮件标题注明 <code class="code">友链申请: 你的昵称</code
+                    >，并附上博客名称、描述、地址、头像等信息即可。
+                  </p>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-base-content mb-2">注意事项</h3>
+                  <div class="alert alert-info text-sm">提交信息可能会被适当修改，以保证展示效果。</div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </section>
+      </div>
+    </MainCard>
+  </CardGroup>
+</BaseLayout>
+
+<style>
+  /* 分类按钮 */
+  .category-tab {
+    @apply px-4 py-2 rounded-full border border-base-300 text-sm transition;
+  }
+  .category-tab:hover {
+    @apply border-primary text-primary;
+  }
+  .category-tab.active {
+    @apply bg-primary text-white border-primary;
+  }
+</style>
