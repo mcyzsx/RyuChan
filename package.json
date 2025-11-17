@@ -37,6 +37,7 @@
     "dotenv": "^16.5.0",
     "isomorphic-dompurify": "^2.32.0",
     "js-yaml": "^4.1.0",
+    "jsdom": "~26.0.0",
     "katex": "^0.16.22",
     "marked": "^14.1.4",
     "mdast": "^3.0.0",
