@@ -3,6 +3,7 @@ import { USER_AVATAR, USER_SIDEBAR_SOCIAL_ICONS, umamiConfig } from "../../confi
 import { Icon } from "astro-icon/components";   
 import { Image } from "astro:assets";  
 import { getAllPosts, getCategoriesWithPosts, getTagsWithCount } from "@utils/blogUtils";  
+import Announcement from "@/components/widgets/Announcement.astro";
   
 // 获取所有博客文章和分类信息  
 const allPosts = await getAllPosts();  
@@ -127,6 +128,10 @@ const getCategoryDisplayName = (category: string): string => {
     </div>  
   </div>  
 </div>  
+
+<div class="card-base p-3 mb-4">  
+<Announcement />
+  </div>
   
 <!-- 第二个盒子：分类列表 -->  
 <div class="card-base p-3 mb-4">  

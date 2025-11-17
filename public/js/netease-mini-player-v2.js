@@ -1,8 +1,8 @@
 /**
- * 网易云音乐迷你播放器V2
- * 基于网易云音乐API的轻量级播放器组件
+ * [NMPv2] NeteaseMiniPlayer v2 JavaScript
+ * Lightweight Player Component Based on NetEase Cloud Music API
  *
- * Copyright 22025 BHCN STUDIO & 北海的佰川（ImBHCN[numakkiyu]）
+ * Copyright 2025 BHCN STUDIO & 北海的佰川（ImBHCN[numakkiyu]）
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const GlobalAudioManager = {
+  currentPlayer: null,
+  setCurrent(player) {
+    if (this.currentPlayer && this.currentPlayer !== player) {
+      this.currentPlayer.pause();
+    }
+    this.currentPlayer = player;
+  },
+};
 class NeteaseMiniPlayer {
   constructor(element) {
     this.element = element;
@@ -25,6 +34,7 @@ class NeteaseMiniPlayer {
     this.playlist = [];
     this.currentIndex = 0;
     this.audio = new Audio();
+    this.wasPlayingBeforeHidden = false;
     this.isPlaying = false;
     this.currentTime = 0;
     this.duration = 0;
@@ -34,6 +44,11 @@ class NeteaseMiniPlayer {
     this.showLyrics = this.config.lyric;
     this.cache = new Map();
     this.init();
+    this.playMode = "list";
+    this.shuffleHistory = [];
+    this.idleTimeout = null;
+    this.idleDelay = 5000;
+    this.isIdle = false;
   }
 
   parseConfig() {
@@ -41,6 +56,7 @@ class NeteaseMiniPlayer {
     const position = element.dataset.position || "static";
     const validPositions = ["static", "top-left", "top-right", "bottom-left", "bottom-right"];
     const finalPosition = validPositions.includes(position) ? position : "static";
+    const defaultMinimized = element.dataset.defaultMinimized === "true";
 
     const embedValue = element.getAttribute("data-embed") || element.dataset.embed;
     const isEmbed = embedValue === "true" || embedValue === true;
@@ -54,7 +70,7 @@ class NeteaseMiniPlayer {
       lyric: element.dataset.lyric !== "false",
       theme: element.dataset.theme || "auto",
       size: element.dataset.size || "compact",
-      loop: element.dataset.loop || "list",
+      defaultMinimized,
     };
   }
 
@@ -70,6 +86,8 @@ class NeteaseMiniPlayer {
 
     this.initTheme();
     this.createPlayerHTML();
+    this.applyResponsiveControls?.();
+    this.setupEnvListeners?.();
     this.bindEvents();
     this.setupAudioEvents();
     try {
@@ -95,6 +113,9 @@ class NeteaseMiniPlayer {
         if (this.config.autoplay && !this.config.embed) {
           this.play();
         }
+      }
+      if (this.config.defaultMinimized && !this.config.embed && this.config.position !== "static") {
+        this.toggleMinimize();
       }
     }
     catch (error) {
@@ -149,6 +170,7 @@ class NeteaseMiniPlayer {
                         </div>
                     </div>
                     <button class="feature-btn lyrics-btn" title="显示/隐藏歌词">📝</button>
+                    ${!this.config.embed ? "<button class=\"feature-btn loop-mode-btn\" title=\"列表循环\">🔁</button>" : ""}
                     ${!this.config.embed ? "<button class=\"feature-btn list-btn\" title=\"播放列表\">☰</button>" : ""}
                     ${!this.config.embed ? "<button class=\"feature-btn minimize-btn\" title=\"缩小/展开\">⚪</button>" : ""}
                 </div>
@@ -174,6 +196,7 @@ class NeteaseMiniPlayer {
       progressBar: this.element.querySelector(".progress-bar"),
       currentTime: this.element.querySelector(".current-time"),
       totalTime: this.element.querySelector(".total-time"),
+      volumeContainer: this.element.querySelector(".volume-container"),
       volumeSlider: this.element.querySelector(".volume-slider"),
       volumeBar: this.element.querySelector(".volume-bar"),
       volumeIcon: this.element.querySelector(".volume-icon"),
@@ -184,6 +207,7 @@ class NeteaseMiniPlayer {
       playlistContent: this.element.querySelector(".playlist-content"),
     };
     this.isMinimized = false;
+    this.elements.loopModeBtn = this.element.querySelector(".loop-mode-btn");
   }
 
   bindEvents() {
@@ -194,8 +218,18 @@ class NeteaseMiniPlayer {
     if (this.elements.nextBtn) {
       this.elements.nextBtn.addEventListener("click", () => this.nextSong());
     }
+    if (this.elements.loopModeBtn) {
+      this.elements.loopModeBtn.addEventListener("click", () => this.togglePlayMode());
+    }
     this.elements.albumCoverContainer.addEventListener("click", () => {
-      this.elements.albumCoverContainer.classList.toggle("expanded");
+      if (this.element.classList.contains("minimized")) {
+        this.elements.albumCoverContainer.classList.toggle("expanded");
+        return;
+      }
+      if (this.currentSong && this.currentSong.id) {
+        const songUrl = `https://music.163.com/song?id=${this.currentSong.id}`;
+        window.open(songUrl, "_blank", "noopener,noreferrer");
+      }
     });
     let isDragging = false;
     this.elements.progressContainer.addEventListener("mousedown", (e) => {
@@ -243,6 +277,198 @@ class NeteaseMiniPlayer {
     if (this.config.position !== "static" && !this.config.embed) {
       this.setupDragAndDrop();
     }
+    if (typeof document.hidden !== "undefined") {
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && this.isPlaying) {
+          this.wasPlayingBeforeHidden = true;
+          this.pause();
+        }
+        else if (!document.hidden && this.wasPlayingBeforeHidden) {
+          this.play();
+          this.wasPlayingBeforeHidden = false;
+        }
+      });
+    }
+
+    this.element.addEventListener("mouseenter", () => {
+      this.restoreOpacity();
+    });
+    this.element.addEventListener("mouseleave", () => {
+      this.startIdleTimer();
+    });
+    this.applyIdlePolicyOnInit();
+  }
+
+  startIdleTimer() {
+    this.clearIdleTimer();
+    if (!this.shouldEnableIdleOpacity())
+      return;
+    this.idleTimeout = setTimeout(() => {
+      this.triggerFadeOut();
+    }, this.idleDelay);
+  }
+
+  clearIdleTimer() {
+    if (this.idleTimeout) {
+      clearTimeout(this.idleTimeout);
+      this.idleTimeout = null;
+    }
+  }
+
+  triggerFadeOut() {
+    if (!this.shouldEnableIdleOpacity())
+      return;
+    if (this.isIdle)
+      return;
+    this.isIdle = true;
+    this.element.classList.remove("fading-in");
+    const side = this.getDockSide();
+    if (side) {
+      this.element.classList.add(`docked-${side}`);
+    }
+    this.element.classList.add("fading-out");
+    const onEnd = (e) => {
+      if (e.animationName !== "player-fade-out")
+        return;
+      this.element.classList.remove("fading-out");
+      this.element.classList.add("idle");
+      this.element.removeEventListener("animationend", onEnd);
+    };
+    this.element.addEventListener("animationend", onEnd);
+  }
+
+  restoreOpacity() {
+    this.clearIdleTimer();
+    const side = this.getDockSide();
+    const hasDock = side ? this.element.classList.contains(`docked-${side}`) : false;
+    if (hasDock) {
+      const popAnim = side === "right" ? "player-popout-right" : "player-popout-left";
+      this.element.classList.add(`popping-${side}`);
+      const onPopEnd = (e) => {
+        if (e.animationName !== popAnim)
+          return;
+        this.element.removeEventListener("animationend", onPopEnd);
+        this.element.classList.remove(`popping-${side}`);
+        this.element.classList.remove(`docked-${side}`);
+        if (this.isIdle) {
+          this.isIdle = false;
+        }
+        this.element.classList.remove("idle", "fading-out");
+        this.element.classList.add("fading-in");
+        const onEndIn = (ev) => {
+          if (ev.animationName !== "player-fade-in")
+            return;
+          this.element.classList.remove("fading-in");
+          this.element.removeEventListener("animationend", onEndIn);
+        };
+        this.element.addEventListener("animationend", onEndIn);
+      };
+      this.element.addEventListener("animationend", onPopEnd);
+      return;
+    }
+    if (!this.isIdle)
+      return;
+    this.isIdle = false;
+    this.element.classList.remove("idle", "fading-out");
+    this.element.classList.add("fading-in");
+    const onEndIn = (ev) => {
+      if (ev.animationName !== "player-fade-in")
+        return;
+      this.element.classList.remove("fading-in");
+      this.element.removeEventListener("animationend", onEndIn);
+    };
+    this.element.addEventListener("animationend", onEndIn);
+  }
+
+  shouldEnableIdleOpacity() {
+    return this.isMinimized === true;
+  }
+
+  applyIdlePolicyOnInit() {
+    if (!this.shouldEnableIdleOpacity()) {
+      this.clearIdleTimer();
+      this.isIdle = false;
+      this.element.classList.remove("idle", "fading-in", "fading-out", "docked-left", "docked-right", "popping-left", "popping-right");
+    }
+  }
+
+  getDockSide() {
+    const pos = this.config.position;
+    if (pos === "top-left" || pos === "bottom-left")
+      return "left";
+    if (pos === "top-right" || pos === "bottom-right")
+      return "right";
+    return "right";
+  }
+
+  static getUAInfo() {
+    if (NeteaseMiniPlayer._uaCache)
+      return NeteaseMiniPlayer._uaCache;
+    const nav = typeof navigator !== "undefined" ? navigator : {};
+    const uaRaw = (nav.userAgent || "");
+    const ua = uaRaw.toLowerCase();
+    const platform = (nav.platform || "").toLowerCase();
+    const maxTP = nav.maxTouchPoints || 0;
+    const isWeChat = /micromessenger/.test(ua);
+    const isQQ = /(mqqbrowser| qq)/.test(ua);
+    const isInAppWebView = /\bwv\b|; wv/.test(ua) || /version\/\d.*chrome/.test(ua);
+    const isiPhone = /iphone/.test(ua);
+    const isiPadUA = /ipad/.test(ua);
+    const isIOSLikePad = !isiPadUA && platform.includes("mac") && maxTP > 1;
+    const isiOS = isiPhone || isiPadUA || isIOSLikePad;
+    const isAndroid = /android/.test(ua);
+    const isHarmonyOS = /harmonyos/.test(uaRaw) || /huawei|honor/.test(ua);
+    const isMobileToken = /mobile/.test(ua) || /sm-|mi |redmi|huawei|honor|oppo|vivo|oneplus/.test(ua);
+    const isHarmonyDesktop = isHarmonyOS && !isMobileToken && !isAndroid && !isiOS;
+    const isPWA = (typeof window !== "undefined" && (
+      (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+      || (nav.standalone === true)
+    )) || false;
+    const isMobile = (isiOS || isAndroid || (isHarmonyOS && !isHarmonyDesktop) || isMobileToken || isInAppWebView);
+    const info = { isMobile, isiOS, isAndroid, isHarmonyOS, isHarmonyDesktop, isWeChat, isQQ, isInAppWebView, isPWA, isiPad: isiPadUA || isIOSLikePad };
+    NeteaseMiniPlayer._uaCache = info;
+    return info;
+  }
+
+  applyResponsiveControls() {
+    const env = NeteaseMiniPlayer.getUAInfo();
+    const shouldHideVolume = !!env.isMobile;
+    this.element.classList.toggle("mobile-env", shouldHideVolume);
+    if (this.elements && this.elements.volumeContainer == null) {
+      this.elements.volumeContainer = this.element.querySelector(".volume-container");
+    }
+    if (this.elements.volumeContainer) {
+      if (shouldHideVolume) {
+        this.elements.volumeContainer.classList.add("sr-visually-hidden");
+        this.elements.volumeContainer.setAttribute("aria-hidden", "false");
+        this.elements.volumeSlider?.setAttribute("aria-label", "音量控制（移动端隐藏，仅无障碍可见）");
+      }
+      else {
+        this.elements.volumeContainer.classList.remove("sr-visually-hidden");
+        this.elements.volumeContainer.removeAttribute("aria-hidden");
+        this.elements.volumeSlider?.removeAttribute("aria-label");
+      }
+    }
+  }
+
+  setupEnvListeners() {
+    const reapply = () => this.applyResponsiveControls();
+    if (window.matchMedia) {
+      try {
+        const mq1 = window.matchMedia("(orientation: portrait)");
+        const mq2 = window.matchMedia("(orientation: landscape)");
+        mq1.addEventListener?.("change", reapply);
+        mq2.addEventListener?.("change", reapply);
+      }
+      catch (e) {
+        mq1.onchange = reapply;
+        mq2.onchange = reapply;
+      }
+    }
+    else {
+      window.addEventListener("orientationchange", reapply);
+    }
+    window.addEventListener("resize", reapply);
   }
 
   setupAudioEvents() {
@@ -287,7 +513,7 @@ class NeteaseMiniPlayer {
   }
 
   async apiRequest(endpoint, params = {}) {
-    const baseUrl = "https://netease-api.kemiaosw.top";
+    const baseUrl = "https://api.hypcvgm.top/NeteaseMiniPlayer/nmp.php";
     const queryString = new URLSearchParams(params).toString();
     const url = `${baseUrl}${endpoint}${queryString ? `?${queryString}` : ""}`;
     try {
@@ -605,12 +831,14 @@ class NeteaseMiniPlayer {
   }
 
   async play() {
+    GlobalAudioManager.setCurrent(this);
     try {
       await this.audio.play();
       this.isPlaying = true;
       this.elements.playIcon.style.display = "none";
       this.elements.pauseIcon.style.display = "inline";
       this.elements.albumCover.classList.add("playing");
+      this.element.classList.add("player-playing");
     }
     catch (error) {
       console.error("播放失败:", error);
@@ -624,6 +852,7 @@ class NeteaseMiniPlayer {
     this.elements.playIcon.style.display = "inline";
     this.elements.pauseIcon.style.display = "none";
     this.elements.albumCover.classList.remove("playing");
+    this.element.classList.remove("player-playing");
   }
 
   async previousSong() {
@@ -639,16 +868,47 @@ class NeteaseMiniPlayer {
   async nextSong() {
     const wasPlaying = this.isPlaying;
     if (this.playlist.length <= 1) {
-      if (this.config.loop === "single") {
+      if (this.playMode === "single") {
         this.audio.currentTime = 0;
-        if (wasPlaying) {
+        if (wasPlaying)
           await this.play();
-        }
         return;
       }
+      this.audio.currentTime = 0;
+      if (wasPlaying)
+        await this.play();
+      return;
     }
-    this.currentIndex = (this.currentIndex + 1) % this.playlist.length;
+
+    let newIndex;
+    if (this.playMode === "shuffle") {
+      const availableIndices = this.playlist
+        .map((_, i) => i)
+        .filter(i => i !== this.currentIndex);
+
+      if (availableIndices.length === 0) {
+        newIndex = this.currentIndex;
+      }
+      else {
+        newIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      }
+      this.shuffleHistory.push(this.currentIndex);
+      if (this.shuffleHistory.length > 2) {
+        this.shuffleHistory.shift();
+      }
+    }
+    else if (this.playMode === "single") {
+      newIndex = this.currentIndex;
+    }
+    else {
+      newIndex = (this.currentIndex + 1) % this.playlist.length;
+    }
+
+    this.currentIndex = newIndex;
     await this.loadCurrentSong();
+
+    this.updatePlaylistDisplay();
+
     if (wasPlaying) {
       setTimeout(async () => {
         try {
@@ -699,9 +959,29 @@ class NeteaseMiniPlayer {
       if (newIndex >= 0 && newIndex < this.lyrics.length) {
         const lyric = this.lyrics[newIndex];
         const lyricText = lyric.text || "♪";
-        this.elements.lyricLine.textContent = lyricText;
-        this.elements.lyricLine.classList.add("current");
-        this.checkLyricScrolling(this.elements.lyricLine, lyricText);
+
+        this.elements.lyricLine.classList.remove("current");
+
+        requestAnimationFrame(() => {
+          this.elements.lyricLine.textContent = lyricText;
+          this.checkLyricScrolling(this.elements.lyricLine, lyricText);
+
+          this.elements.lyricLine.classList.add("current");
+
+          if (lyric.translation) {
+            this.elements.lyricTranslation.textContent = lyric.translation;
+            this.elements.lyricTranslation.style.display = "block";
+            this.elements.lyricTranslation.classList.remove("current");
+            requestAnimationFrame(() => {
+              this.elements.lyricTranslation.classList.add("current");
+            });
+          }
+          else {
+            this.elements.lyricTranslation.style.display = "none";
+            this.elements.lyricTranslation.classList.remove("current", "scrolling");
+          }
+        });
+
         this.elements.lyricsContainer.classList.add("switching");
         setTimeout(() => {
           this.elements.lyricsContainer.classList.remove("switching");
@@ -754,6 +1034,7 @@ class NeteaseMiniPlayer {
     const html = this.playlist.map((song, index) => `
             <div class="playlist-item ${index === this.currentIndex ? "active" : ""}" data-index="${index}">
                 <div class="playlist-item-index">${(index + 1).toString().padStart(2, "0")}</div>
+                <img class="playlist-item-cover" src="${song.picUrl || ""}" alt="专辑封面">
                 <div class="playlist-item-info">
                     <div class="playlist-item-name">${song.name}</div>
                     <div class="playlist-item-artist">${song.artists}</div>
@@ -775,6 +1056,10 @@ class NeteaseMiniPlayer {
         }
       });
     });
+    const activeItem = this.elements.playlistContent.querySelector(".playlist-item.active");
+    if (activeItem) {
+      activeItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   }
 
   seekTo(e) {
@@ -825,6 +1110,20 @@ class NeteaseMiniPlayer {
     }
   }
 
+  togglePlayMode() {
+    const modes = ["list", "single", "shuffle"];
+    const currentIndex = modes.indexOf(this.playMode);
+    this.playMode = modes[(currentIndex + 1) % 3];
+
+    const icons = { list: "🔁", single: "🔂", shuffle: "🔀" };
+    const titles = { list: "列表循环", single: "单曲循环", shuffle: "随机播放" };
+
+    if (this.elements.loopModeBtn) {
+      this.elements.loopModeBtn.textContent = icons[this.playMode];
+      this.elements.loopModeBtn.title = titles[this.playMode];
+    }
+  }
+
   toggleMinimize() {
     const isCurrentlyMinimized = this.element.classList.contains("minimized");
     this.isMinimized = isCurrentlyMinimized;
@@ -835,6 +1134,10 @@ class NeteaseMiniPlayer {
         this.elements.minimizeBtn.classList.add("active");
         this.elements.minimizeBtn.title = "展开";
       }
+      this.clearIdleTimer();
+      this.isIdle = false;
+      this.element.classList.remove("idle", "fading-in", "fading-out", "docked-left", "docked-right", "popping-left", "popping-right");
+      this.startIdleTimer();
     }
     else {
       this.element.classList.remove("minimized");
@@ -843,6 +1146,14 @@ class NeteaseMiniPlayer {
         this.elements.minimizeBtn.classList.remove("active");
         this.elements.minimizeBtn.title = "缩小";
       }
+      this.clearIdleTimer();
+      if (this.isIdle) {
+        this.restoreOpacity();
+      }
+      else {
+        this.element.classList.remove("idle", "fading-in", "fading-out", "docked-left", "docked-right", "popping-left", "popping-right");
+      }
+      this.isIdle = false;
     }
   }
 
@@ -1069,3 +1380,5 @@ if (typeof window !== "undefined") {
     NeteaseMiniPlayer.init();
   }
 }
+
+console.log(["版本号 v2.0.11", "NeteaseMiniPlayer V2 [NMPv2]", "BHCN STUDIO & 北海的佰川（ImBHCN[numakkiyu]）", "GitHub地址：https://github.com/numakkiyu/NeteaseMiniPlayer", "基于 Apache 2.0 开源协议发布"].join("\n"));

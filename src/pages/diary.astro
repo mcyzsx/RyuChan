@@ -10,6 +10,7 @@ import Waline from "@components/comments/Waline.astro";
 import GithubCard from "@components/GitHubCard.astro";
 import { commentsConfig } from "@config";
 import Meting from "@/components/Meting.astro";
+import DiaryBanner from "@/components/DiaryBanner.astro";
 
 const diaryEntries = getRecentDiaryEntries(30);
 
@@ -47,21 +48,23 @@ function renderMusic(music?: MusicItem | MusicItem[]) {
 
 const title = "日记";
 const description = "记录生活点滴，分享日常感悟。";
+const bannerImage = "https://img-api.zsx815.top/mc-pc"; // 你可以换成本地图片或任意图床地址
 ---
 
 <BaseLayout title={title}>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" />
+  <DiaryBanner title={title} description={description} image={bannerImage} />
   <CardGroup cols="1">
     <MainCard infoIcon="lucide:book-open">
       <div class="space-y-6">
         <section>
-          <div class="text-center mb-8">
+          <!-- <div class="text-center mb-8">
             <h1 class="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
               <Icon name="lucide:book-heart" class="w-8 h-8 text-primary" />
               <span>{title}</span>
             </h1>
             <p class="text-base-content/70">{description}</p>
-          </div>
+          </div> -->
 
           <div class="diary-list space-y-4">
             {
