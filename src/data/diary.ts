@@ -37,6 +37,13 @@ export interface DiaryEntry {
 /* ---------- 日记数据 ---------- */
 export const diaryEntries: DiaryEntry[] = [
   {
+    text: "今天完善了友链页面，不确定还会不会继续美化，想添加友链最好去下面的仓库。",
+    date: "2025-11-19 23:30",
+    github: ["https://github.com/mcyzsx/friends"],
+    tags: ["日常"],
+    location: "南京",
+  },
+  {
     text: "今天完善了日记页面，然后添加了公告组件。",
     date: "2025-11-17 21:52",
     tags: ["日常"],
