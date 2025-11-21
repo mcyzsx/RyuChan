@@ -745,3 +745,13 @@ body .aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon.apla
     color: #000000; /* 黑色字体 */
   }
 }
+
+/* 移动端黑字 | 电脑端白字 */
+@media (max-width: 768px) {
+  #heoMusic-page ol li span{color:#000!important}          /* 全部黑色 */
+  #heoMusic-page ol li.aplayer-list-light span{color:#000!important}
+}
+@media (min-width: 769px) {
+  #heoMusic-page ol li span{color:#fff!important}          /* 全部白色 */
+  #heoMusic-page ol li.aplayer-list-light span{color:#fff!important}
+}
