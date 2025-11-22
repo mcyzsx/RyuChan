@@ -1,17 +1,17 @@
 ---
 /**
  * RecentComment.astro
- * 展示 Waline 最新 5 条评论（含回复）
+ * 使用 GET 拉取 Waline 最新 5 条评论 | 点击滚动到对应楼层
  * 用法：<RecentComment serverURL="https://your-waline.vercel.app" />
  */
 export interface Props {
-  serverURL: string; // Waline 后端地址
+  serverURL: string;
 }
 
 const { serverURL } = Astro.props;
 
 /* ---------- 工具函数 ---------- */
-const ADMIN_HASH = "252fb3ce94cd050b2ee835aca2b211b3"; // 管理员邮箱 md5，用于小徽章
+const ADMIN_HASH = "252fb3ce94cd050b2ee835aca2b211b3"; // 如需 md5 比对可保留，这里用 type 判断站长
 
 function formatTimeAgo(ts: number): string {
   const diff = Math.floor((Date.now() - ts) / 1000);
@@ -22,7 +22,7 @@ function formatTimeAgo(ts: number): string {
   return new Intl.DateTimeFormat("zh-CN", { month: "numeric", day: "numeric" }).format(ts) + "日";
 }
 
-function formatContent(html: string = ""): string {
+function formatContent(html = ""): string {
   if (!html) return "";
   return html
     .replace(/<pre><code[\s\S]*?<\/code><\/pre>/g, "[代码块]")
@@ -34,8 +34,8 @@ function formatContent(html: string = ""): string {
     .trim();
 }
 
-/* ---------- 拉取数据 ---------- */
-let comments: Array<{
+/* ---------- 获取数据 ---------- */
+type Comment = {
   id: string;
   content: string;
   author: string;
@@ -43,34 +43,28 @@ let comments: Array<{
   avatar: string;
   isAdmin: boolean;
   url: string;
-}> = [];
+};
+
+let comments: Comment[] = [];
 let error = false;
 
 try {
-  const res = await fetch(`${serverURL}/comment`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type: "RECENT",
-      pageSize: 10, // 多拿一点，后面再过滤
-      lang: "zh-CN",
-    }),
-  });
+  const res = await fetch(`${serverURL}/comment?type=recent&count=5`);
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   const data = await res.json();
+  console.log("[RecentComment] 拿到", data.length, "条", data);
 
-  comments = (data?.data || [])
-    .filter((c: any) => c.url !== "/") // 去掉首页
-    .slice(0, 5)
-    .map((c: any) => ({
-      id: c.objectId || c.id,
-      content: formatContent(c.comment),
-      author: c.nick,
-      date: formatTimeAgo(c.created),
-      avatar: c.avatar || `https://cravatar.cn/avatar/${c.mailMd5}?s=40&d=mp`,
-      isAdmin: c.mailMd5 === ADMIN_HASH,
-      url: c.url,
-    }));
-} catch {
+  comments = data.slice(0, 5).map((c: any) => ({
+    id: c.objectId,
+    content: formatContent(c.comment),
+    author: c.nick,
+    date: formatTimeAgo(new Date(c.insertedAt).getTime()),
+    avatar: c.avatar.trim(),
+    isAdmin: c.type === "administrator",
+    url: c.url,
+  }));
+} catch (err) {
+  console.error("[RecentComment] 请求失败", err);
   error = true;
 }
 ---
@@ -79,13 +73,9 @@ try {
   <ul class="comment-list">
     {
       error ? (
-        <li class="state-box">
-          <span>评论加载失败</span>
-        </li>
+        <li class="state-box">评论加载失败，详见控制台</li>
       ) : comments.length === 0 ? (
-        <li class="state-box">
-          <span>暂无评论</span>
-        </li>
+        <li class="state-box">暂无评论</li>
       ) : (
         comments.map((c) => (
           <li class="comment-item" data-url={c.url} data-id={c.id}>
@@ -113,7 +103,6 @@ try {
 </div>
 
 <style lang="scss">
-  /* 与你 Twikoo 样式完全一致，直接复用 */
   .comment-wrap {
     min-height: 280px;
     padding: 0.6rem 0;
@@ -191,13 +180,13 @@ try {
 </style>
 
 <script>
-  /* 点击跳转到对应段落 */
+  // 点击跳转到 Waline 评论锚点
   document.querySelectorAll(".comment-item").forEach((el) => {
-    const url = el.dataset.url;
-    const id = el.dataset.id;
+    const url = (el as HTMLElement).dataset.url;
+    const id = (el as HTMLElement).dataset.id;
     if (!url || !id) return;
     el.addEventListener("click", () => {
-      location.href = `${url}#${id}`;
+      location.href = `${url}#waline-comment-${id}`;
     });
   });
 </script>

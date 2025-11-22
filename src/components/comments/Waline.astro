@@ -9,6 +9,7 @@ export interface Props {
   reaction?: boolean;
   pageview?: boolean;
 }
+
 const {
   serverURL,
   lang = "en",
@@ -40,8 +41,13 @@ const {
   import { init } from "https://unpkg.com/@waline/client@v3/dist/waline.js";
 
   function mountWaline() {
+    const container = document.getElementById("waline-container");
+    if (!container) {
+      requestAnimationFrame(mountWaline);
+      return;
+    }
     init({
-      el: "#waline-container",
+      el: container,
       serverURL,
       path: location.pathname,
       lang,
@@ -54,10 +60,7 @@ const {
     });
   }
 
-  /* 下一帧再跑，保证 Astro 已插完 DOM */
   requestAnimationFrame(() => mountWaline());
-
-  /* 如果以后开 View-Transition，保留兼容 */
   document.addEventListener("astro:after-swap", () => {
     requestAnimationFrame(() => mountWaline());
   });
