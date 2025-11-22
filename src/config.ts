@@ -22,12 +22,12 @@ export const SITE_FAVICON = config.site.favicon;
 export const SITE_THEME = config.site.theme;
 export const DATE_FORMAT = config.site.date_format;
 
-// Banner 配置 - 使用安全访问  
+// Banner 配置 - 使用安全访问
 export const BANNER_CONFIG = config.site.banner;
 export const BANNER_IMAGES = config.site.banner?.images || [];
 export const BANNER_HEIGHT = config.site.banner?.height || "60vh";
 export const SITE_PAGES = config.site.pages || {};
-// 在现有导出后添加  
+// 在现有导出后添加
 export const TYPEWRITER_TEXTS = config.site.pages?.home?.typewriterTexts || [];
 
 // 博客配置

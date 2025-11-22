@@ -84,19 +84,28 @@ const { album } = Astro.props;
     </Card>
   </CardGroup>
 
-  <!-- 2. Lightbox 脚本（带 jQuery，无需组件） -->
+  <!-- 2. Lightbox 脚本（带 jQuery） -->
   <script src="https://cdn.jsdelivr.net/npm/lightbox2@2.11.4/dist/js/lightbox-plus-jquery.min.js" defer></script>
 
-  <!-- 3. 解锁点击（同原来逻辑） -->
+  <!-- 3. 等 Lightbox 初始化完再解锁 -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const grid = document.querySelector(".masonry-grid");
       if (!grid) return;
-      // 等首图加载完
-      const firstImg = grid.querySelector("img");
-      if (!firstImg) return grid.setAttribute("data-ready", "true");
-      if (firstImg.complete) grid.setAttribute("data-ready", "true");
-      else firstImg.addEventListener("load", () => grid.setAttribute("data-ready", "true"), { once: true });
+
+      // 先临时禁止 <a> 默认跳转
+      grid.querySelectorAll("a[data-lightbox]").forEach((a) => {
+        a.addEventListener("click", (e) => e.preventDefault(), { once: true });
+      });
+
+      // 轮询直到 lightbox 对象出现
+      const poll = setInterval(() => {
+        if (window.lightbox) {
+          clearInterval(poll);
+          window.lightbox.init(); // 重新绑定，解除 preventDefault
+          grid.setAttribute("data-ready", "true");
+        }
+      }, 20);
     });
   </script>
 </BaseLayout>

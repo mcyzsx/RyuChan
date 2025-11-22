@@ -37,7 +37,15 @@ export interface DiaryEntry {
 /* ---------- 日记数据 ---------- */
 export const diaryEntries: DiaryEntry[] = [
   {
-    text: "今天部署了音乐给页面，勉勉强强把，参考张洪大佬的HeoMusic~",
+    text: "今天部署了我的装备页面，日历和站点信息组件，参考mizuki项目~",
+    date: "2025-11-22 23:17",
+    github: ["https://github.com/matsuzaka-yuki/Mizuki"],
+    tags: ["日常"],
+    location: "南京",
+    url: "https://boke.zsx815.top/device",
+  },
+  {
+    text: "今天部署了音乐页面，勉勉强强吧，参考张洪大佬的HeoMusic~",
     date: "2025-11-21 23:50",
     github: ["https://github.com/zhheo/HeoMusict"],
     tags: ["日常"],

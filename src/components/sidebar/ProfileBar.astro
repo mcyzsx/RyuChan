@@ -4,6 +4,9 @@ import { Icon } from "astro-icon/components";
 import { Image } from "astro:assets";  
 import { getAllPosts, getCategoriesWithPosts, getTagsWithCount } from "@utils/blogUtils";  
 import Announcement from "@/components/widgets/Announcement.astro";
+import RecentComment from '@/components/widgets/RecentComment.astro';
+import Calendar from "@components/widgets/Calendar.astro";
+import SiteStats from "@components/widgets/SiteStats.astro";
   
 // 获取所有博客文章和分类信息  
 const allPosts = await getAllPosts();  
@@ -131,6 +134,18 @@ const getCategoryDisplayName = (category: string): string => {
 
 <div class="card-base p-3 mb-4">  
 <Announcement />
+  </div>
+  
+  <div class="card-base p-3 mb-4">  
+<SiteStats />
+  </div>
+
+  <div class="card-base p-3 mb-4">  
+<Calendar />
+  </div>
+
+<div class="card-base p-3 mb-4">  
+    <RecentComment serverURL="https://ryuchan-comment.zsx815.top" />
   </div>
   
 <!-- 第二个盒子：分类列表 -->  

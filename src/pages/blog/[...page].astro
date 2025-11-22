@@ -15,11 +15,12 @@ import Card from "@/components/temple/Card.astro";
 export async function getStaticPaths({ paginate }: { paginate: any }) {
   const rawPaths = await getMainBlogPaginationPaths({ paginate });
 
-  /* =====  过滤掉以“.”开头的任何路径（含 /.well-known/…） ===== */
-  return rawPaths.filter((p: any) => {
+  /* ===== 过滤掉以“.”开头的任何路径（含 /.well-known/…） ===== */
+  return rawPaths.filter((p: { params: { page?: string[] } }) => {
     const segs = p.params.page; // undefined | string[]
     if (!segs) return true; // 保留首页 /blog/
-    return segs.every((seg: string) => !seg.startsWith("."));
+    if (!Array.isArray(segs)) return true; // 兜底非数组
+    return segs.every((seg) => !seg.startsWith("."));
   });
 }
 

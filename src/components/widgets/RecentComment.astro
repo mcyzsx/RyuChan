@@ -1,0 +1,203 @@
+---
+/**
+ * RecentComment.astro
+ * 展示 Waline 最新 5 条评论（含回复）
+ * 用法：<RecentComment serverURL="https://your-waline.vercel.app" />
+ */
+export interface Props {
+  serverURL: string; // Waline 后端地址
+}
+
+const { serverURL } = Astro.props;
+
+/* ---------- 工具函数 ---------- */
+const ADMIN_HASH = "252fb3ce94cd050b2ee835aca2b211b3"; // 管理员邮箱 md5，用于小徽章
+
+function formatTimeAgo(ts: number): string {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return "刚刚";
+  if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)} 天前`;
+  return new Intl.DateTimeFormat("zh-CN", { month: "numeric", day: "numeric" }).format(ts) + "日";
+}
+
+function formatContent(html: string = ""): string {
+  if (!html) return "";
+  return html
+    .replace(/<pre><code[\s\S]*?<\/code><\/pre>/g, "[代码块]")
+    .replace(/<code>([^<]{4,})<\/code>/g, "[代码]")
+    .replace(/<code>([^<]{1,3})<\/code>/g, "$1")
+    .replace(/<img(?![^>]*class=".*tk-owo-emotion")[^>]*>/g, "[图片]")
+    .replace(/<a[^>]*>[\s\S]*?<\/a>/g, "[链接]")
+    .replace(/<(?!\/?img[^>]*class=".*tk-owo-emotion")[^>]+>/g, "")
+    .trim();
+}
+
+/* ---------- 拉取数据 ---------- */
+let comments: Array<{
+  id: string;
+  content: string;
+  author: string;
+  date: string;
+  avatar: string;
+  isAdmin: boolean;
+  url: string;
+}> = [];
+let error = false;
+
+try {
+  const res = await fetch(`${serverURL}/comment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "RECENT",
+      pageSize: 10, // 多拿一点，后面再过滤
+      lang: "zh-CN",
+    }),
+  });
+  const data = await res.json();
+
+  comments = (data?.data || [])
+    .filter((c: any) => c.url !== "/") // 去掉首页
+    .slice(0, 5)
+    .map((c: any) => ({
+      id: c.objectId || c.id,
+      content: formatContent(c.comment),
+      author: c.nick,
+      date: formatTimeAgo(c.created),
+      avatar: c.avatar || `https://cravatar.cn/avatar/${c.mailMd5}?s=40&d=mp`,
+      isAdmin: c.mailMd5 === ADMIN_HASH,
+      url: c.url,
+    }));
+} catch {
+  error = true;
+}
+---
+
+<div class="comment-wrap">
+  <ul class="comment-list">
+    {
+      error ? (
+        <li class="state-box">
+          <span>评论加载失败</span>
+        </li>
+      ) : comments.length === 0 ? (
+        <li class="state-box">
+          <span>暂无评论</span>
+        </li>
+      ) : (
+        comments.map((c) => (
+          <li class="comment-item" data-url={c.url} data-id={c.id}>
+            <div class="meta">
+              <div class="left">
+                <img src={c.avatar} alt={c.author} class="avatar" />
+                <span class="nick">{c.author}</span>
+                {c.isAdmin && (
+                  <svg class="badge" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                    />
+                  </svg>
+                )}
+              </div>
+              <time class="date">{c.date}</time>
+            </div>
+            <p class="content" set:html={c.content} />
+          </li>
+        ))
+      )
+    }
+  </ul>
+</div>
+
+<style lang="scss">
+  /* 与你 Twikoo 样式完全一致，直接复用 */
+  .comment-wrap {
+    min-height: 280px;
+    padding: 0.6rem 0;
+  }
+  .state-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 220px;
+    font-size: 0.9em;
+    color: var(--c-text-2);
+  }
+  .comment-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .comment-item {
+    padding: 0.75rem 0.6rem;
+    border-radius: 8px;
+    transition: background 0.2s;
+    cursor: pointer;
+    & + .comment-item {
+      margin-top: 4px;
+    }
+    &:hover {
+      background: var(--c-bg-soft);
+    }
+  }
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.82em;
+  }
+  .left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .nick {
+    font-weight: 500;
+    color: var(--c-text-1);
+  }
+  .badge {
+    width: 1em;
+    height: 1em;
+    color: var(--c-primary);
+  }
+  .date {
+    white-space: nowrap;
+    color: var(--c-text-3);
+  }
+  .content {
+    overflow: hidden;
+    margin: 0;
+    font-size: 0.9em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--c-text-2);
+    :global(img.tk-owo-emotion) {
+      width: 16px;
+      height: 16px;
+      margin: 0 2px;
+      vertical-align: text-bottom;
+    }
+  }
+</style>
+
+<script>
+  /* 点击跳转到对应段落 */
+  document.querySelectorAll(".comment-item").forEach((el) => {
+    const url = el.dataset.url;
+    const id = el.dataset.id;
+    if (!url || !id) return;
+    el.addEventListener("click", () => {
+      location.href = `${url}#${id}`;
+    });
+  });
+</script>

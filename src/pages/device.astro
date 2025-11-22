@@ -1,0 +1,52 @@
+---
+// src/pages/device.astro
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { Icon } from "astro-icon/components";
+import MainCard from "@/components/MainCard.astro";
+import { devicesData } from "@/data/devices"; // ← 引入设备数据
+---
+
+<BaseLayout title="My Devices">
+  <MainCard
+    title="My Devices"
+    description="设备展示"
+    textOverlay="DEVICES"
+    image="https://img.xiaozhangya.xin/file/1753261567796_bg1.jpg"
+    infoIcon="lucide:smartphone"
+  >
+    <div class="space-y-10 mb-8">
+      <!-- 顶部一句话介绍 -->
+      <section>
+        <p class="text-base-content/80">这里记录了我正在使用的一些硬件设备，方便自己回顾，也给大家做个参考。</p>
+      </section>
+
+      {/* 按类别渲染 */}
+      {
+        Object.entries(devicesData).map(([category, list]) => (
+          <section>
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Icon name="lucide:cpu" class="w-6 h-6 text-primary" />
+              <span>{category}</span>
+            </h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {list.map((d) => (
+                <a
+                  href={d.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="block p-4 bg-base-200 rounded-xl hover:bg-base-300 transition-all hover:scale-[1.02] shadow"
+                >
+                  <img src={d.image} alt={d.name} class="w-full h-40 object-contain mb-4 rounded" loading="lazy" />
+                  <h3 class="font-semibold text-lg mb-1">{d.name}</h3>
+                  <p class="text-sm text-base-content/70 mb-2">{d.specs}</p>
+                  <p class="text-sm text-base-content/90">{d.description}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))
+      }
+    </div>
+  </MainCard>
+</BaseLayout>

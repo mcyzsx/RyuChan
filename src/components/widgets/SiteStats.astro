@@ -1,0 +1,99 @@
+---
+/* 0. 引入：完全沿用你公告栏的 Card 与样式体系 */
+import Card from "../temple/Card.astro";
+import { Icon } from "astro-icon/components";
+
+/* 1. 数据获取：直接用你现成的工具函数 */
+import { getAllPosts, getTagsWithCount, getCategoriesWithPosts } from "../../utils/blogUtils";
+
+const posts = await getAllPosts(); // 文章
+const tagMap = getTagsWithCount(posts); // 标签
+const cateMap = getCategoriesWithPosts(posts); // 分类
+
+/* 2. 字数统计：中英分别算 */
+let totalWords = 0;
+posts.forEach((p) => {
+  if (!p.body) return;
+  const txt = p.body.replace(/\s+/g, " ").trim();
+  const cn = txt.match(/[\u4e00-\u9fa5]/g)?.length || 0;
+  const en = txt.match(/[a-zA-Z]+/g)?.length || 0;
+  totalWords += cn + en;
+});
+
+/* 3. 运行天数 & 最后更新：写死起点，客户端补动态 */
+const siteStartDate = "2025-11-15"; // 和你 config 保持一致
+const lastPubDate = posts[0]?.data.pubDate ?? new Date();
+
+/* 4. 统计项：label 直接写中文，图标用 Material 线性版 */
+const stats = [
+  { icon: "material-symbols:article-outline", label: "文章", value: posts.length },
+  { icon: "material-symbols:folder-outline", label: "分类", value: cateMap.size },
+  { icon: "material-symbols:label-outline", label: "标签", value: tagMap.size },
+  { icon: "material-symbols:text-ad-outline-rounded", label: "总字数", value: totalWords.toLocaleString("zh-CN") },
+  { icon: "material-symbols:calendar-clock-outline", label: "运行天数", value: 0, id: "running-days" },
+  { icon: "material-symbols:ecg-heart-outline", label: "最后更新", value: 0, id: "last-update" },
+];
+---
+
+<Card>
+  <div class="site-stats-widget p-4">
+    <div class="stats-header mb-3">
+      <h3 class="text-lg font-semibold flex items-center gap-2">
+        <span class="text-xl">📊</span>
+        <span>站点统计</span>
+      </h3>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      {
+        stats.map((s) => (
+          <div
+            class="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[rgba(var(--c-bg-soft-rgb),0.6)]
+                    border border-[rgba(var(--c-border-rgb),0.12)] hover:border-[rgba(var(--c-primary-rgb),0.4)]
+                    transition-all duration-300"
+          >
+            <div class="flex items-center gap-2.5">
+              <span class="text-[var(--c-primary)] text-xl">
+                <Icon name={s.icon} />
+              </span>
+              <span class="text-sm font-medium text-[var(--c-text-1)]">{s.label}</span>
+            </div>
+            <span class="text-base font-bold text-[var(--c-text-1)]" data-stat-id={s.id}>
+              {s.value}
+            </span>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</Card>
+
+<!-- 客户端脚本：只更新两个动态值 -->
+<script define:vars={{ siteStartDate, lastPubDate }}>
+  (function () {
+    const today = new Date();
+    const start = new Date(siteStartDate);
+    const running = Math.floor((today - start) / 86_400_000);
+    const last = new Date(lastPubDate);
+    const daysAgo = Math.floor((today - last) / 86_400_000);
+
+    const runEl = document.querySelector('[data-stat-id="running-days"]');
+    const updEl = document.querySelector('[data-stat-id="last-update"]');
+    if (runEl) runEl.textContent = running;
+    if (updEl) updEl.textContent = daysAgo + " 天前";
+  })();
+</script>
+
+<style lang="scss">
+  /* 直接沿用你 Announcement 的动效与配色变量，无需重写 */
+  .site-stats-widget {
+    .stats-header {
+      border-bottom: 1px solid rgba(var(--c-border-rgb), 0.1);
+      padding-bottom: 0.75rem;
+      h3 {
+        color: var(--c-text-1);
+        font-family: var(--font-primary);
+      }
+    }
+  }
+</style>

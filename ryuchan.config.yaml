@@ -134,6 +134,22 @@ site:
           href: /albums
           svg: "heroicons:photo"
           target: _self
+        - id: music
+          text: 音乐馆
+          href: /music
+          svg: "mdi:music"
+          target: _self
+        - id: device
+          text: 我的装备
+          href: /device
+          svg: "material-symbols:devices-other-outline-rounded"
+          target: _self
+    # - id: contact
+    #   text: 联系
+    #   href: /contact
+    #   svg: "material-symbols:contact-mail-outline-rounded"
+    #   target: _self
+    #   subItems:
     # - id: contact
     #   text: Contact
     #   href: "mailto:contact.evesunmaple@outlook.com"
